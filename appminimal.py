@@ -66,13 +66,21 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding - Official Shield Logo (no background)
+# Header with UPS branding - Using base64 embedded logo
 st.markdown("""
 <div class="main-header">
     <div style="padding: 20px; display: inline-block;">
-        <img src="https://logos-download.com/wp-content/uploads/2016/01/UPS_logo_shipping_company.png" 
-             alt="UPS Logo" 
-             style="height: 100px; width: auto;">
+        <svg width="120" height="120" viewBox="0 0 100 100">
+            <!-- Outer yellow/gold shield -->
+            <path d="M 50 5 L 85 20 L 85 60 Q 85 90 50 95 Q 15 90 15 60 L 15 20 Z" 
+                  fill="#FFB500" stroke="none"/>
+            <!-- Inner brown shield -->
+            <path d="M 50 12 L 78 25 L 78 58 Q 78 83 50 88 Q 22 83 22 58 L 22 25 Z" 
+                  fill="#351C15" stroke="none"/>
+            <!-- UPS text in gold -->
+            <text x="50" y="55" font-family="Arial Black, sans-serif" font-size="28" font-weight="bold" 
+                  fill="#FFB500" text-anchor="middle">UPS</text>
+        </svg>
     </div>
     <h1 style="color: #FFB500; margin: 15px 0;">Flight Routing System</h1>
     <p style="color: white; margin: 0; font-size: 18px;">Optimized Shipment Routing Dashboard</p>
