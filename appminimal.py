@@ -66,38 +66,133 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding
+# Header with UPS branding - Official Shield Logo
 st.markdown("""
 <div class="main-header">
-    <div class="ups-logo">
-        <h1 style="color: #351C15; margin: 0; font-size: 48px; font-weight: bold;">UPS</h1>
+    <div class="ups-logo" style="background-color: white; padding: 20px; border-radius: 10px; display: inline-block;">
+        <svg width="140" height="140" viewBox="0 0 200 230" style="display: block; margin: 0 auto;">
+            <!-- Outer Gold Shield -->
+            <path d="M 100 10 
+                     L 180 50
+                     L 180 140
+                     C 180 140 180 200 100 220
+                     C 20 200 20 140 20 140
+                     L 20 50
+                     Z" 
+                  fill="#FFB500" stroke="none"/>
+            
+            <!-- Inner Brown Shield -->
+            <path d="M 100 30 
+                     L 165 60
+                     L 165 135
+                     C 165 135 165 185 100 200
+                     C 35 185 35 135 35 135
+                     L 35 60
+                     Z" 
+                  fill="#351C15" stroke="none"/>
+            
+            <!-- UPS Letters -->
+            <!-- U -->
+            <path d="M 55 80 L 55 120 Q 55 145 75 145 Q 95 145 95 120 L 95 80 L 85 80 L 85 120 Q 85 135 75 135 Q 65 135 65 120 L 65 80 Z" 
+                  fill="#FFB500"/>
+            
+            <!-- P -->
+            <path d="M 100 80 L 100 145 L 110 145 L 110 115 L 120 115 Q 135 115 135 97.5 Q 135 80 120 80 L 100 80 Z 
+                     M 110 90 L 120 90 Q 125 90 125 97.5 Q 125 105 120 105 L 110 105 Z" 
+                  fill="#FFB500"/>
+            
+            <!-- S -->
+            <path d="M 140 80 Q 140 90 150 90 L 160 90 Q 165 90 165 95 Q 165 100 160 100 L 150 100 Q 140 100 140 110 
+                     L 140 135 Q 140 145 150 145 L 165 145 Q 175 145 175 135 Q 175 125 165 125 L 155 125 
+                     Q 150 125 150 120 Q 150 115 155 115 L 165 115 Q 175 115 175 105 L 175 95 Q 175 80 160 80 Z" 
+                  fill="#FFB500"/>
+        </svg>
     </div>
-    <h1 style="color: #FFB500; margin: 10px 0;">Flight Routing System</h1>
-    <p style="color: white; margin: 0;">Optimized Shipment Routing Dashboard</p>
+    <h1 style="color: #FFB500; margin: 15px 0;">Flight Routing System</h1>
+    <p style="color: white; margin: 0; font-size: 18px;">Optimized Shipment Routing Dashboard</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Dashboard Description
+# Dashboard Description - Simple and Clear
 st.markdown("""
 <div class="description-box">
     <h2>📦 Dashboard Overview</h2>
-    <p><strong>Purpose:</strong> This dashboard analyzes UPS flight schedules to find the optimal routing for shipments between origin and destination airports.</p>
     
-    <h3>🔄 How It Works:</h3>
-    <ul>
-        <li><strong>Data Processing:</strong> Loads flight schedules with departure/arrival times, operating days (DOW), and valid date ranges</li>
-        <li><strong>Route Finding:</strong> Searches for direct flights first, then automatically calculates connecting flights if needed</li>
-        <li><strong>Time Optimization:</strong> Ensures minimum 1-hour connection time between flights and finds the fastest total journey time</li>
-        <li><strong>Date Intelligence:</strong> Checks flight availability based on day of week and operating period</li>
-    </ul>
+    <p style="font-size: 16px; line-height: 1.8; margin: 15px 0;">
+    <strong>This dashboard helps UPS logistics teams plan the best flight routes for package shipments between airports.</strong>
+    </p>
     
-    <h3>📊 Outputs:</h3>
-    <ul>
-        <li>✈️ <strong>Direct Flights:</strong> Shows all available direct flights with carrier, times, and duration</li>
-        <li>🔄 <strong>Connecting Routes:</strong> Up to 2 stops with detailed segment information</li>
-        <li>⏱️ <strong>Complete Timing:</strong> Total journey time, individual flight durations, and layover times</li>
-        <li>📅 <strong>Date Flexibility:</strong> If no flights on selected date, automatically finds next available options</li>
-    </ul>
+    <p style="font-size: 15px; line-height: 1.8; color: #444;">
+    Imagine you need to ship a package from Atlanta to Paris. There might not be a direct UPS flight, so you need to find connecting flights through other cities like Louisville or Newark. This tool does that search automatically - it looks through all available UPS flights and finds the fastest way to get your package from point A to point B.
+    </p>
+    
+    <h3 style="color: #351C15; margin-top: 25px;">How the Dashboard Works:</h3>
+    
+    <p style="font-size: 15px; line-height: 1.8; margin: 15px 0;">
+    The system follows a simple but smart process to find your best shipping routes:
+    </p>
+    
+    <p style="font-size: 15px; line-height: 1.8; margin: 15px 0; padding-left: 20px;">
+    <strong>1️⃣ First, it checks for direct flights:</strong><br>
+    The dashboard looks for any non-stop flights between your selected airports. If a direct flight exists on your chosen date (or within the next 14 days), it will show you those options first since they're usually fastest.
+    </p>
+    
+    <p style="font-size: 15px; line-height: 1.8; margin: 15px 0; padding-left: 20px;">
+    <strong>2️⃣ If no direct flights, it finds connections:</strong><br>
+    When there's no direct route, the system builds a map of all possible flight combinations. It looks for ways to connect through other airports, making sure you have at least 1 hour between flights to transfer cargo (but not more than 24 hours of waiting).
+    </p>
+    
+    <p style="font-size: 15px; line-height: 1.8; margin: 15px 0; padding-left: 20px;">
+    <strong>3️⃣ It respects flight schedules:</strong><br>
+    Not all flights operate every day. Some might only fly on Mondays and Thursdays, others daily. The dashboard checks which flights are actually available on your selected date and only shows you real, bookable options.
+    </p>
+    
+    <p style="font-size: 15px; line-height: 1.8; margin: 15px 0; padding-left: 20px;">
+    <strong>4️⃣ Finally, it ranks by speed:</strong><br>
+    All found routes are sorted by total journey time (including waiting times at airports), showing you the fastest options first.
+    </p>
+    
+    <h3 style="color: #351C15; margin-top: 25px;">What Information You'll Get:</h3>
+    
+    <p style="font-size: 15px; line-height: 1.8; margin: 15px 0;">
+    For each route the dashboard finds, you'll see complete details to help you make shipping decisions:
+    </p>
+    
+    <div style="background-color: #FFF; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #DDD;">
+        <p style="font-size: 15px; margin: 10px 0;">
+        <strong>📍 The Complete Route Path:</strong> Which airports your package will go through<br>
+        Example: ATL → SDF → CDG means Atlanta to Louisville to Paris
+        </p>
+        
+        <p style="font-size: 15px; margin: 10px 0;">
+        <strong>✈️ Carrier Information:</strong> Which airline operates each flight segment<br>
+        Example: Flight 1 by 5X, Flight 2 by SRR
+        </p>
+        
+        <p style="font-size: 15px; margin: 10px 0;">
+        <strong>🕐 Precise Timing:</strong> Departure and arrival times for each flight<br>
+        Example: Depart ATL at 14:30, Arrive SDF at 15:45
+        </p>
+        
+        <p style="font-size: 15px; margin: 10px 0;">
+        <strong>⏱️ Duration Breakdown:</strong> How long each flight takes and waiting times between connections<br>
+        Example: Flight time 1h 15m, Wait at SDF 2h 30m, Flight time 8h 20m
+        </p>
+        
+        <p style="font-size: 15px; margin: 10px 0;">
+        <strong>📊 Total Journey Time:</strong> Complete time from origin to destination<br>
+        Example: Total journey: 12h 5m (including all flights and waiting times)
+        </p>
+        
+        <p style="font-size: 15px; margin: 10px 0;">
+        <strong>📅 Date Intelligence:</strong> If no flights on your selected date, it automatically shows the next available options<br>
+        Example: "No flights today, but found routes starting tomorrow"
+        </p>
+    </div>
+    
+    <p style="font-size: 15px; line-height: 1.8; margin: 20px 0; padding: 15px; background-color: #E8F4F8; border-radius: 8px;">
+    <strong>💡 Pro Tip:</strong> The dashboard shows up to 5 different route options when available, sorted from fastest to slowest. This gives you flexibility to choose based on timing preferences, carrier requirements, or operational constraints.
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
