@@ -1,7 +1,6 @@
-streamlit==1.32.0
-pandas==2.2.0
-numpy==1.26.3
-networkx==3.2.1
-plotly==5.19.0
+streamlit==1.29.0
+pandas==2.0.3
+numpy==1.24.3
+networkx==3.1
+plotly==5.18.0
 openpyxl==3.1.2
-xlrd==2.0.1
