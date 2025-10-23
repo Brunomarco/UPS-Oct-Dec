@@ -66,13 +66,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding - Wikipedia SVG with transparent background
+# Header with UPS branding - Larger transparent logo
 st.markdown("""
 <div class="main-header">
     <div style="padding: 20px; display: inline-block; text-align: center;">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/United_Parcel_Service_logo_2014.svg" 
              alt="UPS Logo" 
-             style="height: 100px; width: auto;">
+             style="height: 150px; width: auto;">
     </div>
     <h1 style="color: #FFB500; margin: 15px 0; text-align: center;">Flight Routing System</h1>
     <p style="color: white; margin: 0; font-size: 18px; text-align: center;">Optimized Shipment Routing Dashboard</p>
