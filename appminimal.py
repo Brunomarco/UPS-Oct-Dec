@@ -66,10 +66,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding - Official Shield Logo
+# Header with UPS branding - Official Shield Logo (No Background)
 st.markdown("""
 <div class="main-header">
-    <div class="ups-logo" style="background-color: white; padding: 20px; border-radius: 10px; display: inline-block;">
+    <div class="ups-logo" style="padding: 20px; display: inline-block;">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/United_Parcel_Service_logo_2014.svg/1200px-United_Parcel_Service_logo_2014.svg.png" 
              alt="UPS Logo" 
              style="height: 100px; width: auto;">
