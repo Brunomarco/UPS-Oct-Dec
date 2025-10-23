@@ -118,8 +118,8 @@ with st.expander("**Dashboard Overview - System Documentation and User Guide**",
     ### Executive Summary
     
     This dashboard provides UPS logistics management with an automated flight routing system for optimizing package 
-    shipments between global airports. The system analyzes thousands of flight combinations to identify the most 
-    efficient routing options based on time constraints and operational requirements.
+    shipments between global airports. The system analyzes flight combinations to identify the most efficient routing 
+    options based on time constraints and operational requirements.
     """)
 
     st.markdown("""
@@ -127,45 +127,84 @@ with st.expander("**Dashboard Overview - System Documentation and User Guide**",
     
     **Route Discovery Process:**
     
-    The routing algorithm employs a multi-stage optimization approach:
+    The routing algorithm employs a structured optimization approach:
     
-    1. **Direct Flight Analysis**: The system first queries for non-stop flights between selected airports. Direct routes 
-    are prioritized due to reduced handling time and operational complexity.
+    1. **Direct Flight Priority**: The system first searches for non-stop flights on the selected date. If direct flights 
+    exist on that day, only those options are displayed. Direct routes are prioritized due to reduced handling complexity.
     
-    2. **Connection Mapping**: When direct routes are unavailable, the system constructs a comprehensive network map 
-    of all viable flight combinations, evaluating connections through intermediate airports with enforced constraints 
-    (minimum 1-hour connection time, maximum 24-hour layover).
+    2. **Date Extension Logic**: If no flights are available on the selected date, the system automatically extends the 
+    search window up to 7 days forward, displaying options from the nearest available date first.
     
-    3. **Schedule Validation**: Flight availability is verified against operational schedules. The system accounts for 
-    day-specific operations (certain routes operate only on designated weekdays) and validates against the flight's 
-    active date range.
+    3. **Connection Mapping**: For routes without direct service, the system calculates connecting flights through 
+    intermediate airports. **Critical constraint: Minimum 1-hour connection time is enforced between the arrival of 
+    one flight and the departure of the next flight to ensure adequate cargo transfer time.**
     
-    4. **Optimization Ranking**: All identified routes are sorted by total transit time, including layover periods, 
-    presenting the most time-efficient options first.
+    4. **Schedule Validation**: All flights are validated against operational schedules, checking day-of-week availability 
+    and active date ranges for each flight segment.
+    
+    5. **Optimization Ranking**: Routes are sorted by total transit time (including connection waiting periods), with 
+    the fastest option presented first.
     """)
 
+    st.markdown("""
+    ### Connection Time Requirements
+    
+    **Minimum Connection Time: 1 Hour**
+    
+    The system enforces a strict minimum of 60 minutes between:
+    - The arrival time of an inbound flight (in local time at that airport)
+    - The departure time of the connecting flight (in local time at that airport)
+    
+    This ensures adequate time for:
+    - Cargo unloading from the arriving aircraft
+    - Ground transportation between terminals if required
+    - Cargo loading onto the departing aircraft
+    - Operational buffer for minor delays
+    
+    **Maximum Connection Time: 24 Hours**
+    
+    Connections exceeding 24 hours are excluded to avoid excessive storage and handling costs.
+    """)
+
+    st.markdown("""
+    ### Search Window Logic
+    
+    **Same-Day Priority:**
+    - If flights exist on the selected date: System displays ONLY those flights
+    - If NO flights on selected date: System searches up to 7 days forward
+    - Results are always shown chronologically (earliest available first)
+    
+    **Example Scenarios:**
+    
+    1. **Flights available on selected Tuesday:**
+       - Shows all Tuesday flights only
+       - No future dates displayed
+    
+    2. **No flights on selected Tuesday:**
+       - Automatically checks Wednesday, Thursday, etc.
+       - Shows first available day with flights (e.g., Thursday)
+       - Continues showing next available dates up to 7 days
+    """)
+    
     st.markdown("""
     ### Data Output Specifications
     
     **For each identified route, the system provides:**
     
     **Route Configuration**: Complete airport sequence from origin to destination  
-    Example: ATL-SDF-CDG represents routing from Atlanta through Louisville to Paris
     
     **Carrier Details**: Operating airline for each flight segment  
-    Example: Segment 1 operated by 5X, Segment 2 operated by SRR
     
-    **Schedule Information**: Precise departure and arrival times for all segments  
-    Example: Departure ATL 14:30, Arrival SDF 15:45
+    **Schedule Information**: Precise departure and arrival times in local time for all segments  
     
-    **Time Analysis**: Individual flight durations and connection waiting periods  
-    Example: Flight duration 1:15, Connection time 2:30, Second flight 8:20
+    **Time Analysis**: 
+    - Individual flight durations
+    - Connection waiting periods (always ≥ 1 hour)
+    - Total journey time including all segments and connections
     
-    **Total Transit Time**: Comprehensive journey duration from origin to destination  
-    Example: Total elapsed time 12:05 including all flights and ground time
-    
-    **Date Flexibility**: Automatic identification of next available routing if no same-day options exist  
-    Example: If no flights available on selected date, system displays next available departure date
+    **Date Intelligence**: 
+    - Same-day options when available
+    - Next available departure date when no same-day service exists
     """)
     
     st.divider()
@@ -175,52 +214,37 @@ with st.expander("**Dashboard Overview - System Documentation and User Guide**",
     
     **"Found X connecting route(s)" Interpretation:**
     
-    When the system displays "Found 10 connecting route(s)", this indicates:
+    This message indicates the total number of multi-segment routing options identified. Important clarifications:
     
-    - The routing algorithm has successfully completed its analysis
-    - A total of 10 viable multi-segment routes have been identified between origin and destination
-    - These represent all possible routing combinations meeting operational constraints
+    - The number represents routes found within the active search window
+    - If same-day flights exist: Count includes only same-day departures
+    - If no same-day options: Count includes routes across the 7-day forward window
+    - Routes on different dates are counted separately
     
-    **Important Considerations:**
+    **Distribution Example:**
     
-    - The number represents total routes found across all available dates within the search window
-    - Individual dates may have fewer options (e.g., only 2 routes departing on Tuesday)
-    - Routes are evaluated across a 14-day forward window from the selected date
-    - The system may find 10 total routes distributed across multiple days
+    "Found 10 connecting routes" might mean:
+    - All 10 routes depart on the selected date (if flights available that day)
+    - OR: 3 routes on Day +1, 4 routes on Day +2, 3 routes on Day +3 (if no same-day flights)
     
-    **Example Scenario:**
-    
-    For routing Miami (MIA) to Berlin (BER), 10 total routes might include:
-    - 2 routes departing on the selected date
-    - 3 routes available the following day
-    - 5 routes across the remainder of the week
-    
-    Each route offers different operational characteristics:
-    - Varying total transit times
-    - Different connection airports
-    - Alternative carrier combinations
-    - Diverse departure windows
+    The system always prioritizes and displays earliest departure options first.
     """)
     
     st.markdown("""
     ### Operational Benefits
     
-    **Strategic Advantages:**
+    1. **Time Optimization**: Automated identification of fastest routing with guaranteed connection viability
     
-    1. **Time Optimization**: Identifies fastest routing automatically, reducing manual planning time
+    2. **Date Intelligence**: Smart detection of next available service when selected date has no flights
     
-    2. **Flexibility**: Multiple route options accommodate varying operational priorities
+    3. **Connection Reliability**: 1-hour minimum connection time ensures operational feasibility
     
-    3. **Reliability**: Validates against actual flight schedules, ensuring viable routing
-    
-    4. **Efficiency**: Processes thousands of combinations in seconds versus hours of manual analysis
-    
-    5. **Decision Support**: Provides comprehensive data for informed logistics decisions
+    4. **Decision Support**: Clear presentation of alternatives for informed logistics planning
     """)
 
     st.success("""
-    **System Performance Note**: Routes are ranked by total transit time efficiency. The primary route displayed 
-    represents the optimal time-based solution, with alternatives provided for operational flexibility.
+    **System Performance Note**: The dashboard processes only relevant dates - same-day when available, or extends 
+    to a 7-day window only when necessary. Routes are ranked by efficiency with the fastest option always displayed first.
     """)
 
 st.markdown("---")
@@ -286,8 +310,8 @@ def format_duration(minutes):
     mins = minutes % 60
     return f"{hours}h {mins}m"
 
-def find_direct_flights(schedule_df, origin, destination, date, days_ahead=14):
-    """Find direct flights - ALWAYS check same day first, then next available days"""
+def find_direct_flights(schedule_df, origin, destination, date, days_ahead=7):
+    """Find direct flights - prioritize same day, then search up to 7 days if needed"""
     try:
         # Filter for the specific route
         route_flights = schedule_df[
@@ -299,52 +323,60 @@ def find_direct_flights(schedule_df, origin, destination, date, days_ahead=14):
             return []
         
         results = []
-        flights_by_date = {}
         
-        # ALWAYS start with the requested date (day 0)
-        for day_offset in range(days_ahead + 1):
+        # FIRST: Check for same-day flights
+        same_day_flights = []
+        for idx, flight in route_flights.iterrows():
+            try:
+                if is_flight_available_on_date(flight['DOW(S)'], date):
+                    if pd.notna(flight['Start Date (LZ)']) and pd.notna(flight['End Date (LZ)']):
+                        if flight['Start Date (LZ)'].date() <= date.date() <= flight['End Date (LZ)'].date():
+                            flight_copy = flight.copy()
+                            flight_copy['flight_date'] = date
+                            dep_time = parse_time_to_minutes(flight['Sched Out(L)'])
+                            flight_copy['dep_minutes'] = dep_time if dep_time else 0
+                            same_day_flights.append(flight_copy)
+            except:
+                continue
+        
+        # If same-day flights exist, return ONLY those
+        if same_day_flights:
+            same_day_flights.sort(key=lambda x: x['dep_minutes'])
+            return [{
+                'date': date,
+                'flights': same_day_flights,
+                'days_from_requested': 0
+            }]
+        
+        # NO same-day flights - now search next 7 days
+        for day_offset in range(1, days_ahead + 1):
             check_date = date + timedelta(days=day_offset)
             flights_on_date = []
             
             for idx, flight in route_flights.iterrows():
                 try:
-                    # Check if flight operates on this day of week
                     if is_flight_available_on_date(flight['DOW(S)'], check_date):
-                        # Check if date is within flight's operating period
                         if pd.notna(flight['Start Date (LZ)']) and pd.notna(flight['End Date (LZ)']):
                             if flight['Start Date (LZ)'].date() <= check_date.date() <= flight['End Date (LZ)'].date():
                                 flight_copy = flight.copy()
                                 flight_copy['flight_date'] = check_date
-                                
-                                # Add departure time for sorting
                                 dep_time = parse_time_to_minutes(flight['Sched Out(L)'])
                                 flight_copy['dep_minutes'] = dep_time if dep_time else 0
-                                
                                 flights_on_date.append(flight_copy)
                 except:
                     continue
             
             if flights_on_date:
-                # Sort flights by departure time (earliest first)
                 flights_on_date.sort(key=lambda x: x['dep_minutes'])
-                
-                flights_by_date[check_date] = {
+                results.append({
                     'date': check_date,
                     'flights': flights_on_date,
                     'days_from_requested': day_offset
-                }
-        
-        # Convert to list, already in date order
-        for date_key in sorted(flights_by_date.keys()):
-            results.append(flights_by_date[date_key])
-            if len(results) >= 3:  # Show up to 3 different dates
-                break
-        
-        # If we found same-day flights, always show them first
-        if results and results[0]['days_from_requested'] == 0:
-            st.success(f"✅ Found {len(results[0]['flights'])} flight(s) on your selected date!")
-        elif results:
-            st.warning(f"No flights on selected date. Showing next available starting {results[0]['days_from_requested']} day(s) later.")
+                })
+                
+                # Return up to 3 alternative dates
+                if len(results) >= 3:
+                    break
         
         return results
         
