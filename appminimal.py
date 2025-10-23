@@ -66,20 +66,43 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding - Using base64 embedded logo
+# Header with UPS branding - Exact shield logo from image
 st.markdown("""
 <div class="main-header">
     <div style="padding: 20px; display: inline-block;">
-        <svg width="120" height="120" viewBox="0 0 100 100">
-            <!-- Outer yellow/gold shield -->
-            <path d="M 50 5 L 85 20 L 85 60 Q 85 90 50 95 Q 15 90 15 60 L 15 20 Z" 
-                  fill="#FFB500" stroke="none"/>
+        <svg width="140" height="140" viewBox="0 0 200 230">
+            <!-- Outer yellow/gold shield with curved top -->
+            <path d="M 100 20 
+                     C 100 20 180 40 180 40
+                     L 180 130
+                     C 180 130 180 190 100 210
+                     C 20 190 20 130 20 130
+                     L 20 40
+                     C 20 40 100 20 100 20 Z" 
+                  fill="#FCB514" stroke="none"/>
+            
             <!-- Inner brown shield -->
-            <path d="M 50 12 L 78 25 L 78 58 Q 78 83 50 88 Q 22 83 22 58 L 22 25 Z" 
+            <path d="M 100 35 
+                     C 100 35 165 50 165 50
+                     L 165 125
+                     C 165 125 165 175 100 190
+                     C 35 175 35 125 35 125
+                     L 35 50
+                     C 35 50 100 35 100 35 Z" 
                   fill="#351C15" stroke="none"/>
-            <!-- UPS text in gold -->
-            <text x="50" y="55" font-family="Arial Black, sans-serif" font-size="28" font-weight="bold" 
-                  fill="#FFB500" text-anchor="middle">UPS</text>
+            
+            <!-- UPS Letters in gold/yellow -->
+            <!-- U -->
+            <path d="M 50 70 L 50 120 C 50 140 60 150 75 150 C 90 150 100 140 100 120 L 100 70 L 85 70 L 85 120 C 85 130 82 135 75 135 C 68 135 65 130 65 120 L 65 70 Z" 
+                  fill="#FCB514"/>
+            
+            <!-- P -->
+            <path d="M 105 70 L 105 150 L 120 150 L 120 110 L 130 110 C 145 110 155 100 155 90 C 155 80 145 70 130 70 Z M 120 85 L 130 85 C 135 85 140 87 140 90 C 140 93 135 95 130 95 L 120 95 Z" 
+                  fill="#FCB514"/>
+            
+            <!-- S -->
+            <path d="M 160 70 C 160 70 175 70 175 70 C 185 70 190 75 190 85 C 190 95 185 100 175 100 L 170 100 C 160 100 155 105 155 115 L 155 130 C 155 140 160 150 175 150 C 190 150 190 150 190 150 L 190 135 L 175 135 C 170 135 170 130 170 130 C 170 125 170 115 175 115 L 180 115 C 195 115 205 105 205 90 L 205 85 C 205 70 195 70 180 70 L 160 70 Z" 
+                  fill="#FCB514" transform="scale(0.8) translate(45, 18)"/>
         </svg>
     </div>
     <h1 style="color: #FFB500; margin: 15px 0;">Flight Routing System</h1>
@@ -87,69 +110,98 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Dashboard Description - Plain Text
+# Dashboard Description - Collapsible Dropdown
 st.markdown("---")
-st.subheader("📦 Dashboard Overview")
 
-st.write("""
-This dashboard helps UPS logistics teams plan the best flight routes for package shipments between airports.
+with st.expander("📦 **Dashboard Overview - Click to learn how this system works**", expanded=False):
+    st.write("""
+    This dashboard helps UPS logistics teams plan the best flight routes for package shipments between airports.
 
-Imagine you need to ship a package from Atlanta to Paris. There might not be a direct UPS flight, so you need 
-to find connecting flights through other cities like Louisville or Newark. This tool does that search automatically - 
-it looks through all available UPS flights and finds the fastest way to get your package from point A to point B.
-""")
+    Imagine you need to ship a package from Atlanta to Paris. There might not be a direct UPS flight, so you need 
+    to find connecting flights through other cities like Louisville or Newark. This tool does that search automatically - 
+    it looks through all available UPS flights and finds the fastest way to get your package from point A to point B.
+    """)
 
-st.subheader("How the Dashboard Works:")
+    st.subheader("How the Dashboard Works:")
 
-st.write("""
-The system follows a simple but smart process to find your best shipping routes:
+    st.write("""
+    The system follows a simple but smart process to find your best shipping routes:
 
-**1. First, it checks for direct flights:**
-The dashboard looks for any non-stop flights between your selected airports. If a direct flight exists on your 
-chosen date (or within the next 14 days), it will show you those options first since they're usually fastest.
+    **1. First, it checks for direct flights:**
+    The dashboard looks for any non-stop flights between your selected airports. If a direct flight exists on your 
+    chosen date (or within the next 14 days), it will show you those options first since they're usually fastest.
 
-**2. If no direct flights, it finds connections:**
-When there's no direct route, the system builds a map of all possible flight combinations. It looks for ways to 
-connect through other airports, making sure you have at least 1 hour between flights to transfer cargo (but not 
-more than 24 hours of waiting).
+    **2. If no direct flights, it finds connections:**
+    When there's no direct route, the system builds a map of all possible flight combinations. It looks for ways to 
+    connect through other airports, making sure you have at least 1 hour between flights to transfer cargo (but not 
+    more than 24 hours of waiting).
 
-**3. It respects flight schedules:**
-Not all flights operate every day. Some might only fly on Mondays and Thursdays, others daily. The dashboard 
-checks which flights are actually available on your selected date and only shows you real, bookable options.
+    **3. It respects flight schedules:**
+    Not all flights operate every day. Some might only fly on Mondays and Thursdays, others daily. The dashboard 
+    checks which flights are actually available on your selected date and only shows you real, bookable options.
 
-**4. Finally, it ranks by speed:**
-All found routes are sorted by total journey time (including waiting times at airports), showing you the fastest 
-options first.
-""")
+    **4. Finally, it ranks by speed:**
+    All found routes are sorted by total journey time (including waiting times at airports), showing you the fastest 
+    options first.
+    """)
 
-st.subheader("What Information You'll Get:")
+    st.subheader("What Information You'll Get:")
 
-st.write("""
-For each route the dashboard finds, you'll see complete details to help you make shipping decisions:
+    st.write("""
+    For each route the dashboard finds, you'll see complete details to help you make shipping decisions:
 
-📍 **The Complete Route Path:** Which airports your package will go through
-   Example: ATL → SDF → CDG means Atlanta to Louisville to Paris
+    📍 **The Complete Route Path:** Which airports your package will go through
+       Example: ATL → SDF → CDG means Atlanta to Louisville to Paris
 
-✈️ **Carrier Information:** Which airline operates each flight segment
-   Example: Flight 1 by 5X, Flight 2 by SRR
+    ✈️ **Carrier Information:** Which airline operates each flight segment
+       Example: Flight 1 by 5X, Flight 2 by SRR
 
-🕐 **Precise Timing:** Departure and arrival times for each flight
-   Example: Depart ATL at 14:30, Arrive SDF at 15:45
+    🕐 **Precise Timing:** Departure and arrival times for each flight
+       Example: Depart ATL at 14:30, Arrive SDF at 15:45
 
-⏱️ **Duration Breakdown:** How long each flight takes and waiting times between connections
-   Example: Flight time 1h 15m, Wait at SDF 2h 30m, Flight time 8h 20m
+    ⏱️ **Duration Breakdown:** How long each flight takes and waiting times between connections
+       Example: Flight time 1h 15m, Wait at SDF 2h 30m, Flight time 8h 20m
 
-📊 **Total Journey Time:** Complete time from origin to destination
-   Example: Total journey: 12h 5m (including all flights and waiting times)
+    📊 **Total Journey Time:** Complete time from origin to destination
+       Example: Total journey: 12h 5m (including all flights and waiting times)
 
-📅 **Date Intelligence:** If no flights on your selected date, it automatically shows the next available options
-   Example: No flights today, but found routes starting tomorrow
-""")
+    📅 **Date Intelligence:** If no flights on your selected date, it automatically shows the next available options
+       Example: No flights today, but found routes starting tomorrow
+    """)
+    
+    st.divider()
+    
+    st.subheader("❓ What Does '✅ Found 10 connecting route(s)!' Mean?")
+    
+    st.info("""
+    **This message appears after the system searches for routes with connections (stops).**
+    
+    When you see "✅ Found 10 connecting route(s)!", it means:
+    
+    • **✅** = Success! The search completed successfully
+    • **10** = The system found 10 different ways to get from origin to destination
+    • **connecting route(s)** = These routes require stops/connections (not direct flights)
+    
+    **Example:** If shipping from Miami (MIA) to Berlin (BER), the system might find:
+    - Route 1: MIA → Louisville (SDF) → Cologne (CGN) → BER
+    - Route 2: MIA → Philadelphia (PHL) → Frankfurt (FRA) → BER
+    - Route 3: MIA → Newark (EWR) → Munich (MUC) → BER
+    - ... and 7 more route options
+    
+    **Why show multiple routes?**
+    Different routes offer different advantages:
+    - Some are faster (shortest total time)
+    - Some have shorter layovers (less waiting)
+    - Some use preferred carriers
+    - Some depart at more convenient times
+    
+    The system shows you up to 10 options so you can choose based on your specific needs.
+    """)
 
-st.info("""
-💡 **Pro Tip:** The dashboard shows up to 5 different route options when available, sorted from fastest to slowest. 
-This gives you flexibility to choose based on timing preferences, carrier requirements, or operational constraints.
-""")
+    st.success("""
+    💡 **Pro Tip:** The dashboard shows routes sorted from fastest to slowest total journey time. 
+    The first route shown is usually the quickest way to get your package to its destination!
+    """)
 
 st.markdown("---")
 
@@ -215,7 +267,7 @@ def format_duration(minutes):
     return f"{hours}h {mins}m"
 
 def find_direct_flights(schedule_df, origin, destination, date, days_ahead=14):
-    """Find direct flights on the requested date or next available days - prioritize earliest"""
+    """Find direct flights - ALWAYS check same day first, then next available days"""
     try:
         # Filter for the specific route
         route_flights = schedule_df[
@@ -223,11 +275,16 @@ def find_direct_flights(schedule_df, origin, destination, date, days_ahead=14):
             (schedule_df['Dest'] == destination)
         ].copy()
         
-        results = []
-        flights_found = []
+        if route_flights.empty:
+            return []
         
+        results = []
+        flights_by_date = {}
+        
+        # ALWAYS start with the requested date (day 0)
         for day_offset in range(days_ahead + 1):
             check_date = date + timedelta(days=day_offset)
+            flights_on_date = []
             
             for idx, flight in route_flights.iterrows():
                 try:
@@ -243,44 +300,33 @@ def find_direct_flights(schedule_df, origin, destination, date, days_ahead=14):
                                 dep_time = parse_time_to_minutes(flight['Sched Out(L)'])
                                 flight_copy['dep_minutes'] = dep_time if dep_time else 0
                                 
-                                flights_found.append({
-                                    'date': check_date,
-                                    'flight': flight_copy,
-                                    'days_from_requested': day_offset
-                                })
+                                flights_on_date.append(flight_copy)
                 except:
                     continue
+            
+            if flights_on_date:
+                # Sort flights by departure time (earliest first)
+                flights_on_date.sort(key=lambda x: x['dep_minutes'])
+                
+                flights_by_date[check_date] = {
+                    'date': check_date,
+                    'flights': flights_on_date,
+                    'days_from_requested': day_offset
+                }
         
-        # Sort all found flights by date and departure time
-        flights_found.sort(key=lambda x: (x['date'], x['flight']['dep_minutes']))
+        # Convert to list, already in date order
+        for date_key in sorted(flights_by_date.keys()):
+            results.append(flights_by_date[date_key])
+            if len(results) >= 3:  # Show up to 3 different dates
+                break
         
-        # Group flights by date for display
-        current_date = None
-        current_group = []
+        # If we found same-day flights, always show them first
+        if results and results[0]['days_from_requested'] == 0:
+            st.success(f"✅ Found {len(results[0]['flights'])} flight(s) on your selected date!")
+        elif results:
+            st.warning(f"No flights on selected date. Showing next available starting {results[0]['days_from_requested']} day(s) later.")
         
-        for flight_data in flights_found:
-            if current_date != flight_data['date']:
-                if current_group:
-                    results.append({
-                        'date': current_date,
-                        'flights': current_group,
-                        'days_from_requested': (current_date - date).days
-                    })
-                current_date = flight_data['date']
-                current_group = [flight_data['flight']]
-            else:
-                current_group.append(flight_data['flight'])
-        
-        # Add last group
-        if current_group:
-            results.append({
-                'date': current_date,
-                'flights': current_group,
-                'days_from_requested': (current_date - date).days
-            })
-        
-        # Return earliest dates first (already sorted)
-        return results[:3]  # Show up to 3 different dates
+        return results
         
     except Exception as e:
         return []
@@ -600,24 +646,36 @@ def main():
                     
                     with st.spinner(f"Searching routes from {origin} to {destination}..."):
                         try:
-                            # Search for direct flights
+                            # Search for direct flights - ALWAYS checks selected date first
                             direct_results = find_direct_flights(schedule_df, origin, destination, search_date)
                             
                             if direct_results:
-                                st.success(f"✅ Found direct flights!")
+                                # Check if we have same-day flights
+                                has_same_day = (direct_results[0]['days_from_requested'] == 0)
                                 
-                                for result in direct_results[:2]:  # Show first 2 available dates
+                                if has_same_day:
+                                    st.success(f"✅ Found direct flights on your selected date ({selected_date})!")
+                                else:
+                                    st.warning(f"⚠️ No flights available on {selected_date}. Showing next available dates.")
+                                
+                                for result in direct_results:
                                     date_diff = result['days_from_requested']
-                                    date_label = "✓ On requested date" if date_diff == 0 else f"📅 Next available: +{date_diff} day(s)"
+                                    if date_diff == 0:
+                                        date_label = "✓ ON YOUR SELECTED DATE"
+                                        color = "green"
+                                    else:
+                                        date_label = f"📅 Next available: +{date_diff} day(s)"
+                                        color = "orange"
                                     
                                     st.markdown(f"""
                                     <div class="route-card">
-                                        <h3 style="color: #351C15;">📅 {result['date'].strftime('%Y-%m-%d (%A)')} - {date_label}</h3>
+                                        <h3 style="color: {color};">📅 {result['date'].strftime('%Y-%m-%d (%A)')} - {date_label}</h3>
                                     </div>
                                     """, unsafe_allow_html=True)
                                     
                                     for i, flight in enumerate(result['flights'], 1):
-                                        with st.expander(f"✈️ Direct Flight Option {i} - Carrier: {flight.get('Carrier', 'N/A')}", expanded=(date_diff == 0)):
+                                        with st.expander(f"✈️ Direct Flight Option {i} - Carrier: {flight.get('Carrier', 'N/A')} - Departs: {flight['Sched Out(L)']}", 
+                                                       expanded=(date_diff == 0 and i == 1)):
                                             col1, col2, col3 = st.columns(3)
                                             
                                             with col1:
@@ -655,10 +713,18 @@ def main():
                                 routes = find_connecting_routes(network, origin, destination, search_date)
                                 
                                 if routes:
-                                    st.success(f"✅ Found {len(routes)} connecting route(s)!")
+                                    # Check if we have same-day departure routes
+                                    same_day_routes = [r for r in routes if r['start_date'].date() == search_date.date()]
                                     
-                                    # Show first 2 best routes
-                                    for i, route in enumerate(routes[:2], 1):
+                                    if same_day_routes:
+                                        st.success(f"✅ Found {len(same_day_routes)} connecting route(s) departing on your selected date!")
+                                    else:
+                                        st.warning(f"⚠️ No connecting routes on {selected_date}. Showing routes starting from next available dates.")
+                                    
+                                    st.success(f"✅ Total: Found {len(routes)} connecting route(s)!")
+                                    
+                                    # Show first few best routes
+                                    for i, route in enumerate(routes[:5], 1):
                                         route_str = " → ".join(route['path'])
                                         total_duration = route['total_duration']
                                         total_hours = total_duration // 60
@@ -669,14 +735,20 @@ def main():
                                         wait_hours = total_wait // 60
                                         wait_mins = total_wait % 60
                                         
-                                        with st.expander(f"🔄 Connecting Route {i}: {route_str} ({route['stops']} stop(s))", expanded=(i == 1)):
+                                        # Check if departing on selected date
+                                        is_same_day = route['start_date'].date() == search_date.date()
+                                        date_indicator = "✓ DEPARTS ON SELECTED DATE" if is_same_day else f"Departs +{(route['start_date'].date() - search_date.date()).days} days"
+                                        
+                                        with st.expander(f"🔄 Route {i}: {route_str} ({route['stops']} stop(s)) - {date_indicator}", 
+                                                       expanded=(i == 1 and is_same_day)):
                                             
                                             # Route summary
                                             st.markdown(f"""
                                             <div style="background-color: #E8F4F8; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
                                                 <h4 style="color: #351C15; margin: 0;">Route Summary</h4>
                                                 <p><strong>Route:</strong> {route_str}</p>
-                                                <p><strong>Journey Dates:</strong> {route['start_date'].strftime('%Y-%m-%d')} to {route['end_date'].strftime('%Y-%m-%d')}</p>
+                                                <p><strong>Departure Date:</strong> {route['start_date'].strftime('%Y-%m-%d')} ({route['start_date'].strftime('%A')})</p>
+                                                <p><strong>Arrival Date:</strong> {route['end_date'].strftime('%Y-%m-%d')} ({route['end_date'].strftime('%A')})</p>
                                                 <p><strong>Total Journey Time:</strong> {total_hours}h {total_mins}m</p>
                                                 <p><strong>Total Waiting Time:</strong> {wait_hours}h {wait_mins}m</p>
                                                 <p><strong>Number of Stops:</strong> {route['stops']}</p>
