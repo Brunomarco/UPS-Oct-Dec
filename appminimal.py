@@ -66,7 +66,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding - Logo left, title right
+# Header with UPS branding - Logo left, centered title
 st.markdown("""
 <div class="main-header" style="display: flex; align-items: center; padding: 20px;">
     <div style="flex: 0 0 auto; margin-right: 30px;">
@@ -74,7 +74,7 @@ st.markdown("""
              alt="UPS Logo" 
              style="height: 120px; width: auto;">
     </div>
-    <div style="flex: 1;">
+    <div style="flex: 1; text-align: center;">
         <h1 style="color: #FFB500; margin: 0;">Flight Routing System</h1>
         <p style="color: white; margin: 5px 0 0 0; font-size: 18px;">Optimized Shipment Routing Dashboard</p>
     </div>
