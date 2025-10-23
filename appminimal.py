@@ -66,16 +66,16 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding - Transparent Background
+# Header with UPS branding - Wikipedia SVG with transparent background
 st.markdown("""
 <div class="main-header">
-    <div style="padding: 20px; display: inline-block;">
-        <img src="https://logos-download.com/wp-content/uploads/2016/01/UPS_logo_shipping_company-700x700.png" 
+    <div style="padding: 20px; display: inline-block; text-align: center;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/United_Parcel_Service_logo_2014.svg" 
              alt="UPS Logo" 
              style="height: 100px; width: auto;">
     </div>
-    <h1 style="color: #FFB500; margin: 15px 0;">Flight Routing System</h1>
-    <p style="color: white; margin: 0; font-size: 18px;">Optimized Shipment Routing Dashboard</p>
+    <h1 style="color: #FFB500; margin: 15px 0; text-align: center;">Flight Routing System</h1>
+    <p style="color: white; margin: 0; font-size: 18px; text-align: center;">Optimized Shipment Routing Dashboard</p>
 </div>
 """, unsafe_allow_html=True)
 
