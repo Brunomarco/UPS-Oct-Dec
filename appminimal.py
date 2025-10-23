@@ -110,97 +110,117 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Dashboard Description - Collapsible Dropdown
+# Dashboard Description - Professional Executive Summary
 st.markdown("---")
 
-with st.expander("📦 **Dashboard Overview - Click to learn how this system works**", expanded=False):
-    st.write("""
-    This dashboard helps UPS logistics teams plan the best flight routes for package shipments between airports.
-
-    Imagine you need to ship a package from Atlanta to Paris. There might not be a direct UPS flight, so you need 
-    to find connecting flights through other cities like Louisville or Newark. This tool does that search automatically - 
-    it looks through all available UPS flights and finds the fastest way to get your package from point A to point B.
+with st.expander("**Dashboard Overview - System Documentation and User Guide**", expanded=False):
+    st.markdown("""
+    ### Executive Summary
+    
+    This dashboard provides UPS logistics management with an automated flight routing system for optimizing package 
+    shipments between global airports. The system analyzes thousands of flight combinations to identify the most 
+    efficient routing options based on time constraints and operational requirements.
     """)
 
-    st.subheader("How the Dashboard Works:")
-
-    st.write("""
-    The system follows a simple but smart process to find your best shipping routes:
-
-    **1. First, it checks for direct flights:**
-    The dashboard looks for any non-stop flights between your selected airports. If a direct flight exists on your 
-    chosen date (or within the next 14 days), it will show you those options first since they're usually fastest.
-
-    **2. If no direct flights, it finds connections:**
-    When there's no direct route, the system builds a map of all possible flight combinations. It looks for ways to 
-    connect through other airports, making sure you have at least 1 hour between flights to transfer cargo (but not 
-    more than 24 hours of waiting).
-
-    **3. It respects flight schedules:**
-    Not all flights operate every day. Some might only fly on Mondays and Thursdays, others daily. The dashboard 
-    checks which flights are actually available on your selected date and only shows you real, bookable options.
-
-    **4. Finally, it ranks by speed:**
-    All found routes are sorted by total journey time (including waiting times at airports), showing you the fastest 
-    options first.
+    st.markdown("""
+    ### System Methodology
+    
+    **Route Discovery Process:**
+    
+    The routing algorithm employs a multi-stage optimization approach:
+    
+    1. **Direct Flight Analysis**: The system first queries for non-stop flights between selected airports. Direct routes 
+    are prioritized due to reduced handling time and operational complexity.
+    
+    2. **Connection Mapping**: When direct routes are unavailable, the system constructs a comprehensive network map 
+    of all viable flight combinations, evaluating connections through intermediate airports with enforced constraints 
+    (minimum 1-hour connection time, maximum 24-hour layover).
+    
+    3. **Schedule Validation**: Flight availability is verified against operational schedules. The system accounts for 
+    day-specific operations (certain routes operate only on designated weekdays) and validates against the flight's 
+    active date range.
+    
+    4. **Optimization Ranking**: All identified routes are sorted by total transit time, including layover periods, 
+    presenting the most time-efficient options first.
     """)
 
-    st.subheader("What Information You'll Get:")
-
-    st.write("""
-    For each route the dashboard finds, you'll see complete details to help you make shipping decisions:
-
-    📍 **The Complete Route Path:** Which airports your package will go through
-       Example: ATL → SDF → CDG means Atlanta to Louisville to Paris
-
-    ✈️ **Carrier Information:** Which airline operates each flight segment
-       Example: Flight 1 by 5X, Flight 2 by SRR
-
-    🕐 **Precise Timing:** Departure and arrival times for each flight
-       Example: Depart ATL at 14:30, Arrive SDF at 15:45
-
-    ⏱️ **Duration Breakdown:** How long each flight takes and waiting times between connections
-       Example: Flight time 1h 15m, Wait at SDF 2h 30m, Flight time 8h 20m
-
-    📊 **Total Journey Time:** Complete time from origin to destination
-       Example: Total journey: 12h 5m (including all flights and waiting times)
-
-    📅 **Date Intelligence:** If no flights on your selected date, it automatically shows the next available options
-       Example: No flights today, but found routes starting tomorrow
+    st.markdown("""
+    ### Data Output Specifications
+    
+    **For each identified route, the system provides:**
+    
+    **Route Configuration**: Complete airport sequence from origin to destination  
+    Example: ATL-SDF-CDG represents routing from Atlanta through Louisville to Paris
+    
+    **Carrier Details**: Operating airline for each flight segment  
+    Example: Segment 1 operated by 5X, Segment 2 operated by SRR
+    
+    **Schedule Information**: Precise departure and arrival times for all segments  
+    Example: Departure ATL 14:30, Arrival SDF 15:45
+    
+    **Time Analysis**: Individual flight durations and connection waiting periods  
+    Example: Flight duration 1:15, Connection time 2:30, Second flight 8:20
+    
+    **Total Transit Time**: Comprehensive journey duration from origin to destination  
+    Example: Total elapsed time 12:05 including all flights and ground time
+    
+    **Date Flexibility**: Automatic identification of next available routing if no same-day options exist  
+    Example: If no flights available on selected date, system displays next available departure date
     """)
     
     st.divider()
     
-    st.subheader("❓ What Does '✅ Found 10 connecting route(s)!' Mean?")
+    st.markdown("""
+    ### Understanding System Messages
     
-    st.info("""
-    **This message appears after the system searches for routes with connections (stops).**
+    **"Found X connecting route(s)" Interpretation:**
     
-    When you see "✅ Found 10 connecting route(s)!", it means:
+    When the system displays "Found 10 connecting route(s)", this indicates:
     
-    • **✅** = Success! The search completed successfully
-    • **10** = The system found 10 different ways to get from origin to destination
-    • **connecting route(s)** = These routes require stops/connections (not direct flights)
+    - The routing algorithm has successfully completed its analysis
+    - A total of 10 viable multi-segment routes have been identified between origin and destination
+    - These represent all possible routing combinations meeting operational constraints
     
-    **Example:** If shipping from Miami (MIA) to Berlin (BER), the system might find:
-    - Route 1: MIA → Louisville (SDF) → Cologne (CGN) → BER
-    - Route 2: MIA → Philadelphia (PHL) → Frankfurt (FRA) → BER
-    - Route 3: MIA → Newark (EWR) → Munich (MUC) → BER
-    - ... and 7 more route options
+    **Important Considerations:**
     
-    **Why show multiple routes?**
-    Different routes offer different advantages:
-    - Some are faster (shortest total time)
-    - Some have shorter layovers (less waiting)
-    - Some use preferred carriers
-    - Some depart at more convenient times
+    - The number represents total routes found across all available dates within the search window
+    - Individual dates may have fewer options (e.g., only 2 routes departing on Tuesday)
+    - Routes are evaluated across a 14-day forward window from the selected date
+    - The system may find 10 total routes distributed across multiple days
     
-    The system shows you up to 10 options so you can choose based on your specific needs.
+    **Example Scenario:**
+    
+    For routing Miami (MIA) to Berlin (BER), 10 total routes might include:
+    - 2 routes departing on the selected date
+    - 3 routes available the following day
+    - 5 routes across the remainder of the week
+    
+    Each route offers different operational characteristics:
+    - Varying total transit times
+    - Different connection airports
+    - Alternative carrier combinations
+    - Diverse departure windows
+    """)
+    
+    st.markdown("""
+    ### Operational Benefits
+    
+    **Strategic Advantages:**
+    
+    1. **Time Optimization**: Identifies fastest routing automatically, reducing manual planning time
+    
+    2. **Flexibility**: Multiple route options accommodate varying operational priorities
+    
+    3. **Reliability**: Validates against actual flight schedules, ensuring viable routing
+    
+    4. **Efficiency**: Processes thousands of combinations in seconds versus hours of manual analysis
+    
+    5. **Decision Support**: Provides comprehensive data for informed logistics decisions
     """)
 
     st.success("""
-    💡 **Pro Tip:** The dashboard shows routes sorted from fastest to slowest total journey time. 
-    The first route shown is usually the quickest way to get your package to its destination!
+    **System Performance Note**: Routes are ranked by total transit time efficiency. The primary route displayed 
+    represents the optimal time-based solution, with alternatives provided for operational flexibility.
     """)
 
 st.markdown("---")
