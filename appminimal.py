@@ -66,20 +66,50 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding - Logo left, title truly centered
+# Header with UPS branding - Exact shield logo from image
 st.markdown("""
-<div class="main-header" style="position: relative; padding: 20px;">
-    <div style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%);">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/United_Parcel_Service_logo_2014.svg" 
-             alt="UPS Logo" 
-             style="height: 120px; width: auto;">
+<div class="main-header">
+    <div style="padding: 20px; display: inline-block;">
+        <svg width="140" height="140" viewBox="0 0 200 230">
+            <!-- Outer yellow/gold shield with curved top -->
+            <path d="M 100 20 
+                     C 100 20 180 40 180 40
+                     L 180 130
+                     C 180 130 180 190 100 210
+                     C 20 190 20 130 20 130
+                     L 20 40
+                     C 20 40 100 20 100 20 Z" 
+                  fill="#FCB514" stroke="none"/>
+            
+            <!-- Inner brown shield -->
+            <path d="M 100 35 
+                     C 100 35 165 50 165 50
+                     L 165 125
+                     C 165 125 165 175 100 190
+                     C 35 175 35 125 35 125
+                     L 35 50
+                     C 35 50 100 35 100 35 Z" 
+                  fill="#351C15" stroke="none"/>
+            
+            <!-- UPS Letters in gold/yellow -->
+            <!-- U -->
+            <path d="M 50 70 L 50 120 C 50 140 60 150 75 150 C 90 150 100 140 100 120 L 100 70 L 85 70 L 85 120 C 85 130 82 135 75 135 C 68 135 65 130 65 120 L 65 70 Z" 
+                  fill="#FCB514"/>
+            
+            <!-- P -->
+            <path d="M 105 70 L 105 150 L 120 150 L 120 110 L 130 110 C 145 110 155 100 155 90 C 155 80 145 70 130 70 Z M 120 85 L 130 85 C 135 85 140 87 140 90 C 140 93 135 95 130 95 L 120 95 Z" 
+                  fill="#FCB514"/>
+            
+            <!-- S -->
+            <path d="M 160 70 C 160 70 175 70 175 70 C 185 70 190 75 190 85 C 190 95 185 100 175 100 L 170 100 C 160 100 155 105 155 115 L 155 130 C 155 140 160 150 175 150 C 190 150 190 150 190 150 L 190 135 L 175 135 C 170 135 170 130 170 130 C 170 125 170 115 175 115 L 180 115 C 195 115 205 105 205 90 L 205 85 C 205 70 195 70 180 70 L 160 70 Z" 
+                  fill="#FCB514" transform="scale(0.8) translate(45, 18)"/>
+        </svg>
     </div>
-    <div style="text-align: center;">
-        <h1 style="color: #FFB500; margin: 0;">Flight Routing System</h1>
-        <p style="color: white; margin: 5px 0 0 0; font-size: 18px;">Optimized Shipment Routing Dashboard</p>
-    </div>
+    <h1 style="color: #FFB500; margin: 15px 0;">Flight Routing System</h1>
+    <p style="color: white; margin: 0; font-size: 18px;">Optimized Shipment Routing Dashboard</p>
 </div>
 """, unsafe_allow_html=True)
+
 # Dashboard Description - Professional Executive Summary
 st.markdown("---")
 
