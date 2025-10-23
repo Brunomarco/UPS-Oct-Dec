@@ -66,18 +66,47 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding - Logo left, title truly centered
+# Header with UPS branding - Exact shield logo from image
 st.markdown("""
-<div class="main-header" style="position: relative; padding: 20px;">
-    <div style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%);">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/United_Parcel_Service_logo_2014.svg" 
-             alt="UPS Logo" 
-             style="height: 120px; width: auto;">
+<div class="main-header">
+    <div style="padding: 20px; display: inline-block;">
+        <svg width="140" height="140" viewBox="0 0 200 230">
+            <!-- Outer yellow/gold shield with curved top -->
+            <path d="M 100 20 
+                     C 100 20 180 40 180 40
+                     L 180 130
+                     C 180 130 180 190 100 210
+                     C 20 190 20 130 20 130
+                     L 20 40
+                     C 20 40 100 20 100 20 Z" 
+                  fill="#FCB514" stroke="none"/>
+            
+            <!-- Inner brown shield -->
+            <path d="M 100 35 
+                     C 100 35 165 50 165 50
+                     L 165 125
+                     C 165 125 165 175 100 190
+                     C 35 175 35 125 35 125
+                     L 35 50
+                     C 35 50 100 35 100 35 Z" 
+                  fill="#351C15" stroke="none"/>
+            
+            <!-- UPS Letters in gold/yellow -->
+            <!-- U -->
+            <path d="M 50 70 L 50 120 C 50 140 60 150 75 150 C 90 150 100 140 100 120 L 100 70 L 85 70 L 85 120 C 85 130 82 135 75 135 C 68 135 65 130 65 120 L 65 70 Z" 
+                  fill="#FCB514"/>
+            
+            <!-- P -->
+            <path d="M 105 70 L 105 150 L 120 150 L 120 110 L 130 110 C 145 110 155 100 155 90 C 155 80 145 70 130 70 Z M 120 85 L 130 85 C 135 85 140 87 140 90 C 140 93 135 95 130 95 L 120 95 Z" 
+                  fill="#FCB514"/>
+            
+            <!-- S -->
+            <path d="M 160 70 C 160 70 175 70 175 70 C 185 70 190 75 190 85 C 190 95 185 100 175 100 L 170 100 C 160 100 155 105 155 115 L 155 130 C 155 140 160 150 175 150 C 190 150 190 150 190 150 L 190 135 L 175 135 C 170 135 170 130 170 130 C 170 125 170 115 175 115 L 180 115 C 195 115 205 105 205 90 L 205 85 C 205 70 195 70 180 70 L 160 70 Z" 
+                  fill="#FCB514" transform="scale(0.8) translate(45, 18)"/>
+        </svg>
     </div>
-    <div style="text-align: center;">
-        <h1 style="color: #FFB500; margin: 0;">Flight Routing System</h1>
-        <p style="color: white; margin: 5px 0 0 0; font-size: 18px;">Optimized Shipment Routing Dashboard</p>
-    </div>
+    <h1 style="color: #FFB500; margin: 15px 0;">Flight Routing System</h1>
+    <p style="color: white; margin: 0; font-size: 18px;">Optimized Shipment Routing Dashboard</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -406,19 +435,19 @@ def build_network(schedule_df, start_date, days_ahead=14):
     return network
 
 def find_connecting_routes(network, origin, destination, start_date, max_stops=2):
-    """Find ALL possible connecting flights with proper time sequencing - earliest flights first"""
+    """Find ALL possible connecting flights - prioritize earliest first flight departure"""
     if origin not in network:
         return []
     
     all_routes = []
     
-    # Get ALL flights from origin, sorted by date and time
-    initial_flights = network.get(origin, [])
+    # Get ALL flights from origin, sorted by date and time (earliest first)
+    initial_flights = [f for f in network.get(origin, []) if f['date'] >= start_date]
     initial_flights.sort(key=lambda x: (x['date'], x['departure']))
     
-    # Try each initial flight as a starting point
+    # For each possible first flight (starting with earliest)
     for first_flight in initial_flights:
-        # Queue for BFS from this starting flight
+        # Start building routes from this first flight
         queue = [(
             first_flight['destination'],
             [origin, first_flight['destination']],
@@ -444,7 +473,7 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=2
         while queue:
             current_airport, path, last_arrival, last_date, total_duration, route_info = queue.pop(0)
             
-            # Create unique state for this path
+            # Create unique state
             state = (current_airport, tuple(path), last_date.date(), last_arrival)
             if state in visited_for_this_start:
                 continue
@@ -466,36 +495,40 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=2
             if len(path) - 1 >= max_stops + 1:
                 continue
             
-            # Find ALL possible connecting flights from current airport
+            # Find ALL possible next flights from current airport
             if current_airport in network:
-                # Get all flights from current airport, sorted by date and time
-                possible_connections = sorted(network[current_airport], key=lambda x: (x['date'], x['departure']))
+                # Get ALL future flights from this airport (including days ahead)
+                possible_connections = [f for f in network[current_airport] 
+                                       if f['destination'] not in path]  # Avoid cycles
                 
                 for next_flight in possible_connections:
-                    # Skip if destination already in path (no cycles)
-                    if next_flight['destination'] in path:
-                        continue
-                    
-                    # Calculate connection time
+                    # Calculate if this connection is valid
                     min_connection = 60  # 1 hour minimum
                     
-                    # Determine if flight is valid based on timing
-                    valid_connection = False
-                    wait_time = 0
-                    
-                    if next_flight['date'].date() > last_date.date():
-                        # Next flight is on a future day
+                    # Check timing constraints
+                    if next_flight['date'] > last_date:
+                        # Flight is on a future day
                         days_diff = (next_flight['date'].date() - last_date.date()).days
-                        wait_time = (days_diff - 1) * 24 * 60 + (24 * 60 - last_arrival) + next_flight['departure']
-                        valid_connection = wait_time <= 1440  # Max 24 hours wait
+                        # Calculate total wait time including overnight
+                        if last_arrival > (24 * 60):  # Handle overnight arrivals
+                            actual_arrival = last_arrival % (24 * 60)
+                        else:
+                            actual_arrival = last_arrival
+                        
+                        # Time from arrival to midnight + days in between + time to departure
+                        wait_time = (24 * 60 - actual_arrival) + ((days_diff - 1) * 24 * 60) + next_flight['departure']
+                        
                     elif next_flight['date'].date() == last_date.date():
-                        # Same day - check if departure is after arrival + minimum connection
+                        # Same day connection
                         if next_flight['departure'] >= last_arrival + min_connection:
                             wait_time = next_flight['departure'] - last_arrival
-                            valid_connection = wait_time <= 1440
+                        else:
+                            continue  # Too early, skip
+                    else:
+                        continue  # Flight is before current date, skip
                     
-                    # Add this connection if valid
-                    if valid_connection and min_connection <= wait_time <= 1440:
+                    # Accept connections up to 48 hours wait (increased from 24)
+                    if min_connection <= wait_time <= 2880:  # 48 hours = 2880 minutes
                         new_total = total_duration + wait_time + next_flight['duration']
                         
                         new_route_info = route_info + [{
@@ -520,28 +553,26 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=2
                             new_route_info
                         ))
     
-    # Remove duplicate routes (same path and timing)
+    # Remove duplicate routes
     unique_routes = []
     seen_routes = set()
     
     for route in all_routes:
-        # Create a unique identifier for each route based on path and dates
-        route_id = (
-            tuple(route['path']),
-            route['start_date'].date(),
-            route.get('end_date', route['start_date']).date(),
-            route['total_duration']
-        )
+        # Create unique identifier based on exact flight sequence and dates
+        route_id = tuple([
+            (leg['from'], leg['to'], leg['date'].date(), leg['departure'])
+            for leg in route['route_info']
+        ])
         
         if route_id not in seen_routes:
             seen_routes.add(route_id)
             unique_routes.append(route)
     
-    # Sort by: 1) Start date (earliest first), 2) Total duration (shortest first)
+    # Sort by: 1) First flight date (earliest first), 2) Total duration (shortest first)
     unique_routes.sort(key=lambda x: (x['start_date'], x['total_duration']))
     
-    # Return top routes (max 10 to show variety)
-    return unique_routes[:10]
+    # Return more routes to show variety
+    return unique_routes[:15]  # Increased from 10 to show more options
 
 # Main Application
 def main():
