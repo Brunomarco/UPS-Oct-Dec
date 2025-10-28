@@ -516,7 +516,249 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=3
                         # Calculate total wait time including overnight
                         if last_arrival > (24 * 60):  # Handle overnight arrivals
                             actual_arrival = last_arrival % (24 * 60)
+                            
+            with tab2:
+                st.markdown("<h2 style='color: #351C15;'>🔍 Custom Route Finder</h2>", unsafe_allow_html=True)
+                st.info("Select any origin and destination airport from the flight schedule")
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    # Get all unique origins from schedule
+                    all_origins = sorted(schedule_df['Orig'].dropna().unique())
+                    selected_origin = st.selectbox(
+                        "Select Origin Airport",
+                        options=all_origins,
+                        help="Choose from all available origin airports",
+                        key="tab2_origin"
+                    )
+                
+                with col2:
+                    # Get all unique destinations from schedule
+                    all_destinations = sorted(schedule_df['Dest'].dropna().unique())
+                    selected_destination = st.selectbox(
+                        "Select Destination Airport",
+                        options=all_destinations,
+                        help="Choose from all available destination airports",
+                        key="tab2_dest"
+                    )
+                
+                with col3:
+                    # Date selection
+                    if pd.notna(min_date) and pd.notna(max_date):
+                        selected_date_tab2 = st.date_input(
+                            "Select Shipment Date",
+                            value=min_date.date(),
+                            min_value=min_date.date(),
+                            max_value=max_date.date(),
+                            key="tab2_date"
+                        )
+                        
+                        day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                        day_of_week_tab2 = day_names[selected_date_tab2.weekday()]
+                
+                # Display selected route
+                if selected_origin and selected_destination:
+                    st.markdown(f"""
+                    <div style="background-color: #FFF8E8; padding: 15px; border-radius: 5px; border-left: 3px solid #FFB500; margin: 20px 0;">
+                        <strong>Selected Route:</strong> {selected_origin} → {selected_destination}<br>
+                        <strong>Selected Date:</strong> {selected_date_tab2} ({day_of_week_tab2})
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Search button for custom routes
+                if st.button("🔍 Find Available Routes", type="primary", use_container_width=True, key="tab2_search"):
+                    if selected_origin and selected_destination:
+                        if selected_origin == selected_destination:
+                            st.warning("⚠️ Origin and destination cannot be the same. Please select different airports.")
                         else:
+                            search_date_tab2 = pd.Timestamp(selected_date_tab2)
+                            
+                            with st.spinner(f"Searching routes from {selected_origin} to {selected_destination}..."):
+                                try:
+                                    # Search for direct flights
+                                    direct_results_tab2 = find_direct_flights(schedule_df, selected_origin, selected_destination, search_date_tab2)
+                                    
+                                    if direct_results_tab2:
+                                        # Check if we have same-day flights
+                                        has_same_day = (direct_results_tab2[0]['days_from_requested'] == 0)
+                                        
+                                        if has_same_day:
+                                            st.success(f"✅ Found direct flights on your selected date ({selected_date_tab2})!")
+                                        else:
+                                            st.warning(f"⚠️ No flights available on {selected_date_tab2}. Showing next available dates.")
+                                        
+                                        for result in direct_results_tab2:
+                                            date_diff = result['days_from_requested']
+                                            if date_diff == 0:
+                                                date_label = "✓ ON YOUR SELECTED DATE"
+                                                color = "green"
+                                            else:
+                                                date_label = f"📅 Next available: +{date_diff} day(s)"
+                                                color = "orange"
+                                            
+                                            st.markdown(f"""
+                                            <div class="route-card">
+                                                <h3 style="color: {color};">📅 {result['date'].strftime('%Y-%m-%d (%A)')} - {date_label}</h3>
+                                            </div>
+                                            """, unsafe_allow_html=True)
+                                            
+                                            for i, flight in enumerate(result['flights'], 1):
+                                                with st.expander(f"✈️ Direct Flight Option {i} - Carrier: {flight.get('Carrier', 'N/A')} - Departs: {flight['Sched Out(L)']}", 
+                                                               expanded=(date_diff == 0 and i == 1)):
+                                                    col1, col2, col3 = st.columns(3)
+                                                    
+                                                    with col1:
+                                                        st.markdown("**📅 Flight Date**")
+                                                        st.write(f"{result['date'].strftime('%Y-%m-%d')}")
+                                                        st.write(f"{result['date'].strftime('%A')}")
+                                                        st.markdown("**✈️ Carrier**")
+                                                        st.write(f"{flight.get('Carrier', 'N/A')}")
+                                                    
+                                                    with col2:
+                                                        st.markdown("**🕐 Schedule**")
+                                                        st.write(f"Departure: {flight['Sched Out(L)']} from {selected_origin}")
+                                                        st.write(f"Arrival: {flight['Sched In(L)']} at {selected_destination}")
+                                                        st.markdown("**✈️ Flight Number**")
+                                                        st.write(f"{flight.get('Carrier', '')}{flight.get('Flight #', '')}")
+                                                    
+                                                    with col3:
+                                                        st.markdown("**⏱️ Duration**")
+                                                        st.write(f"Flight Time: {flight['Blkhr']}")
+                                                        st.write(f"No connections needed")
+                                                    
+                                                    st.success(f"""
+                                                    **Summary:**
+                                                    - Total Travel Time: {flight['Blkhr']}
+                                                    - Direct flight (no stops)
+                                                    - Carrier: {flight.get('Carrier', 'N/A')}
+                                                    """)
+                                    
+                                    # Always search for connecting flights as well
+                                    st.info("🔄 Searching for connecting flight options...")
+                                    
+                                    network_tab2 = build_network(schedule_df, search_date_tab2)
+                                    
+                                    if network_tab2:
+                                        routes_tab2 = find_connecting_routes(network_tab2, selected_origin, selected_destination, search_date_tab2)
+                                        
+                                        if routes_tab2:
+                                            # Show first few best routes without any success messages
+                                            for i, route in enumerate(routes_tab2[:5], 1):
+                                                route_str = " → ".join(route['path'])
+                                                total_duration = route['total_duration']
+                                                total_hours = total_duration // 60
+                                                total_mins = total_duration % 60
+                                                
+                                                # Calculate total waiting time
+                                                total_wait = sum([leg['wait_time'] for leg in route['route_info']])
+                                                wait_hours = total_wait // 60
+                                                wait_mins = total_wait % 60
+                                                
+                                                # Check if departing on selected date
+                                                is_same_day = route['start_date'].date() == search_date_tab2.date()
+                                                date_indicator = "✓ DEPARTS ON SELECTED DATE" if is_same_day else f"Departs +{(route['start_date'].date() - search_date_tab2.date()).days} days"
+                                                
+                                                with st.expander(f"🔄 Route {i}: {route_str} ({route['stops']} stop(s)) - {date_indicator}", 
+                                                               expanded=(i == 1 and is_same_day)):
+                                                    
+                                                    # Route summary
+                                                    st.markdown(f"""
+                                                    <div style="background-color: #E8F4F8; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                                                        <h4 style="color: #351C15; margin: 0;">Route Summary</h4>
+                                                        <p><strong>Route:</strong> {route_str}</p>
+                                                        <p><strong>Departure Date:</strong> {route['start_date'].strftime('%Y-%m-%d')} ({route['start_date'].strftime('%A')})</p>
+                                                        <p><strong>Arrival Date:</strong> {route['end_date'].strftime('%Y-%m-%d')} ({route['end_date'].strftime('%A')})</p>
+                                                        <p><strong>Total Journey Time:</strong> {total_hours}h {total_mins}m</p>
+                                                        <p><strong>Total Waiting Time:</strong> {wait_hours}h {wait_mins}m</p>
+                                                        <p><strong>Number of Stops:</strong> {route['stops']}</p>
+                                                    </div>
+                                                    """, unsafe_allow_html=True)
+                                                    
+                                                    # Flight segments
+                                                    st.markdown("### ✈️ Flight Segments:")
+                                                    
+                                                    for j, leg in enumerate(route['route_info'], 1):
+                                                        st.markdown(f"""
+                                                        <div style="background-color: #FAFAFA; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #FFB500;">
+                                                            <h4 style="color: #351C15;">Segment {j}: {leg['from']} → {leg['to']}</h4>
+                                                        </div>
+                                                        """, unsafe_allow_html=True)
+                                                        
+                                                        col1, col2, col3, col4 = st.columns(4)
+                                                        
+                                                        with col1:
+                                                            st.markdown("**Date & Carrier**")
+                                                            st.write(f"📅 {leg['date'].strftime('%Y-%m-%d')}")
+                                                            st.write(f"📅 {leg['date'].strftime('%A')}")
+                                                            st.write(f"✈️ Carrier: {leg['carrier']}")
+                                                        
+                                                        with col2:
+                                                            st.markdown("**Flight Details**")
+                                                            st.write(f"Flight: {leg['flight']}")
+                                                            st.write(f"Dep: {leg['departure']}")
+                                                            st.write(f"Arr: {leg['arrival']}")
+                                                        
+                                                        with col3:
+                                                            st.markdown("**Duration**")
+                                                            st.write(f"Flight Time: {format_duration(leg['duration'])}")
+                                                            st.write(f"({leg['duration_str']})")
+                                                        
+                                                        with col4:
+                                                            st.markdown("**Connection**")
+                                                            if j < len(route['route_info']):
+                                                                wait_time = route['route_info'][j]['wait_time']
+                                                                st.write(f"⏳ Wait: {format_duration(wait_time)}")
+                                                            else:
+                                                                st.write("Final destination")
+                                                        
+                                                        if j < len(route['route_info']):
+                                                            st.markdown("⬇️")
+                                                    
+                                                    # Final summary
+                                                    st.success(f"""
+                                                    **Journey Complete:**
+                                                    - Total Travel Time: {total_hours}h {total_mins}m
+                                                    - Total Waiting Time: {wait_hours}h {wait_mins}m
+                                                    - Total Segments: {len(route['route_info'])}
+                                                    """)
+                                        
+                                        elif not direct_results_tab2:
+                                            st.error(f"""
+                                            ❌ No routes found from {selected_origin} to {selected_destination}
+                                            
+                                            **Possible reasons:**
+                                            - This specific route may not be served in the UPS network
+                                            - The route might require more than 3 stops (current limit)
+                                            - There may be no connections within 72 hours between segments
+                                            - The airports might not have overlapping service dates
+                                            
+                                            **Suggestions:**
+                                            - Try a different date range
+                                            - Check if both airports exist in the flight schedule
+                                            - Consider shipping through a major hub airport instead
+                                            """)
+                                    else:
+                                        if not direct_results_tab2:
+                                            st.error(f"""
+                                            ❌ No flight network available for {selected_origin}
+                                            
+                                            This origin airport may not have any departing flights in the schedule.
+                                            Please verify the airport code or try a different origin.
+                                            """)
+                                
+                                except Exception as e:
+                                    st.error(f"""
+                                    ❌ An error occurred while searching for routes.
+                                    
+                                    **Error details:** {str(e)}
+                                    
+                                    **Please try:**
+                                    - Selecting different airports
+                                    - Choosing a different date
+                                    - Verifying the airport codes are correct
+                                    """)
+        else:
                             actual_arrival = last_arrival
                         
                         # Time from arrival to midnight + days in between + time to departure
@@ -647,65 +889,72 @@ def main():
                 """, unsafe_allow_html=True)
             
             st.markdown("---")
-            st.markdown("<h2 style='color: #351C15;'>🔍 Route Finder</h2>", unsafe_allow_html=True)
             
-            col1, col2 = st.columns(2)
+            # Create tabs
+            tab1, tab2 = st.tabs(["📋 Predefined Routes (from Data sheet)", "✈️ Custom Route Selection"])
             
-            with col1:
-                # Get route pairs
-                route_pairs = routes_df[['Origin Airport', 'Destination Airport']].drop_duplicates()
-                route_pairs = route_pairs.dropna()
+            with tab1:
+                st.markdown("<h2 style='color: #351C15;'>🔍 Route Finder - Predefined Pairs</h2>", unsafe_allow_html=True)
                 
-                route_options = []
-                route_dict = {}
-                for idx, row in route_pairs.iterrows():
-                    route_str = f"{row['Origin Airport']} → {row['Destination Airport']}"
-                    route_options.append(route_str)
-                    route_dict[route_str] = (row['Origin Airport'], row['Destination Airport'])
+                col1, col2 = st.columns(2)
                 
-                selected_route = st.selectbox(
-                    "Select Origin → Destination Route",
-                    options=sorted(route_options),
-                    help="Select from available route pairs"
-                )
-                
-                if selected_route:
-                    origin, destination = route_dict[selected_route]
-                    st.markdown(f"""
-                    <div style="background-color: #FFF8E8; padding: 10px; border-radius: 5px; border-left: 3px solid #FFB500;">
-                        <strong>Selected Route:</strong> {origin} → {destination}
-                    </div>
-                    """, unsafe_allow_html=True)
-            
-            with col2:
-                min_date = schedule_df['Start Date (LZ)'].min()
-                max_date = schedule_df['End Date (LZ)'].max()
-                
-                if pd.notna(min_date) and pd.notna(max_date):
-                    selected_date = st.date_input(
-                        "Select Shipment Date",
-                        value=min_date.date(),
-                        min_value=min_date.date(),
-                        max_value=max_date.date()
+                with col1:
+                    # Get route pairs from Data sheet
+                    route_pairs = routes_df[['Origin Airport', 'Destination Airport']].drop_duplicates()
+                    route_pairs = route_pairs.dropna()
+                    
+                    route_options = []
+                    route_dict = {}
+                    for idx, row in route_pairs.iterrows():
+                        route_str = f"{row['Origin Airport']} → {row['Destination Airport']}"
+                        route_options.append(route_str)
+                        route_dict[route_str] = (row['Origin Airport'], row['Destination Airport'])
+                    
+                    selected_route = st.selectbox(
+                        "Select Origin → Destination Route",
+                        options=sorted(route_options),
+                        help="Select from available route pairs",
+                        key="tab1_route"
                     )
                     
-                    day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-                    day_of_week = day_names[selected_date.weekday()]
-                    st.markdown(f"""
-                    <div style="background-color: #FFF8E8; padding: 10px; border-radius: 5px; border-left: 3px solid #FFB500;">
-                        <strong>Selected Date:</strong> {selected_date} ({day_of_week})
-                    </div>
-                    """, unsafe_allow_html=True)
-            
-            # Search button with UPS styling
-            if st.button("🔍 Find Available Routes", type="primary", use_container_width=True):
-                if selected_route:
-                    search_date = pd.Timestamp(selected_date)
+                    if selected_route:
+                        origin, destination = route_dict[selected_route]
+                        st.markdown(f"""
+                        <div style="background-color: #FFF8E8; padding: 10px; border-radius: 5px; border-left: 3px solid #FFB500;">
+                            <strong>Selected Route:</strong> {origin} → {destination}
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                with col2:
+                    min_date = schedule_df['Start Date (LZ)'].min()
+                    max_date = schedule_df['End Date (LZ)'].max()
                     
-                    with st.spinner(f"Searching routes from {origin} to {destination}..."):
-                        try:
-                            # Search for direct flights - ALWAYS checks selected date first
-                            direct_results = find_direct_flights(schedule_df, origin, destination, search_date)
+                    if pd.notna(min_date) and pd.notna(max_date):
+                        selected_date = st.date_input(
+                            "Select Shipment Date",
+                            value=min_date.date(),
+                            min_value=min_date.date(),
+                            max_value=max_date.date(),
+                            key="tab1_date"
+                        )
+                        
+                        day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                        day_of_week = day_names[selected_date.weekday()]
+                        st.markdown(f"""
+                        <div style="background-color: #FFF8E8; padding: 10px; border-radius: 5px; border-left: 3px solid #FFB500;">
+                            <strong>Selected Date:</strong> {selected_date} ({day_of_week})
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # Search button with UPS styling
+                if st.button("🔍 Find Available Routes", type="primary", use_container_width=True, key="tab1_search"):
+                    if selected_route:
+                        search_date = pd.Timestamp(selected_date)
+                        
+                        with st.spinner(f"Searching routes from {origin} to {destination}..."):
+                            try:
+                                # Search for direct flights - ALWAYS checks selected date first
+                                direct_results = find_direct_flights(schedule_df, origin, destination, search_date)
                             
                             if direct_results:
                                 # Check if we have same-day flights
