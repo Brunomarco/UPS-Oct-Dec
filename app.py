@@ -304,10 +304,10 @@ def parse_time_to_minutes(time_str):
 
 def format_duration(minutes):
     """Format duration in minutes to readable format"""
-    if minutes is None:
+    if minutes is None or minutes < 0:
         return "N/A"
-    hours = minutes // 60
-    mins = minutes % 60
+    hours = int(minutes // 60)
+    mins = int(minutes % 60)
     return f"{hours}h {mins}m"
 
 def find_direct_flights(schedule_df, origin, destination, date, days_ahead=7):
