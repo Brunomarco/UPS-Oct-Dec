@@ -376,21 +376,32 @@ def build_network(schedule_df, start_date, days_ahead=14):
                                 dep_time = parse_time_to_minutes(flight['Sched Out(L)'])
                                 arr_time = parse_time_to_minutes(flight['Sched In(L)'])
                                 
-                                if dep_time is not None and arr_time is not None:
-                                    # Handle overnight flights
+                                # Parse Blkhr for actual flight duration
+                                blkhr_str = str(flight['Blkhr'])
+                                flight_duration = 0
+                                if pd.notna(flight['Blkhr']) and blkhr_str != 'nan':
+                                    if ':' in blkhr_str:
+                                        parts = blkhr_str.split(':')
+                                        hours = int(parts[0]) if parts[0] else 0
+                                        minutes = int(parts[1]) if len(parts) > 1 else 0
+                                        flight_duration = hours * 60 + minutes
+                                
+                                if dep_time is not None and arr_time is not None and flight_duration > 0:
+                                    # Calculate arrival in minutes for same/next day logic
+                                    # If arrival time < departure time in local times, assume next day arrival
                                     if arr_time < dep_time:
                                         arr_time += 24 * 60
                                     
                                     network[origin].append({
                                         'destination': dest,
                                         'departure': dep_time,
-                                        'arrival': arr_time,
+                                        'arrival': arr_time,  # Keep for connection logic
                                         'dep_str': str(flight['Sched Out(L)']),
                                         'arr_str': str(flight['Sched In(L)']),
                                         'duration_str': str(flight['Blkhr']),
                                         'carrier': str(flight.get('Carrier', 'N/A')),
                                         'flight_num': f"{flight.get('Carrier', '')}{flight.get('Flight #', '')}",
-                                        'duration': arr_time - dep_time,
+                                        'duration': flight_duration,  # Use Blkhr for actual flight duration
                                         'date': check_date,
                                         'day_offset': day_offset
                                     })
@@ -418,28 +429,30 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=2
     
     # For each possible first flight (starting with earliest)
     for first_flight in initial_flights:
-        # Calculate actual arrival date and time for the first flight
-        first_arrival = first_flight['arrival']
+        # For connections, we use the local arrival time (which might be next day)
+        # The arrival field already accounts for overnight flights (arr_time + 24*60 if arr < dep)
+        first_arrival_minutes = first_flight['arrival']
         first_arrival_date = first_flight['date']
-        # If arrival time is less than departure, it's an overnight flight
-        if first_flight['arrival'] < first_flight['departure']:
+        
+        # Check if this is an overnight flight (arrival < departure means next day)
+        if first_flight['arrival'] > (24 * 60):
+            # This means the flight arrives the next day
             first_arrival_date = first_flight['date'] + timedelta(days=1)
-            first_arrival = first_flight['arrival'] + (24 * 60)  # Add 24 hours for proper calculation
         
         # Start building routes from this first flight
         queue = [(
             first_flight['destination'],
             [origin, first_flight['destination']],
-            first_arrival,
+            first_arrival_minutes,
             first_arrival_date,
-            first_flight['duration'],
+            first_flight['duration'],  # This now uses Blkhr
             [{
                 'from': origin,
                 'to': first_flight['destination'],
                 'date': first_flight['date'],
                 'departure': first_flight['dep_str'],
                 'arrival': first_flight['arr_str'],
-                'duration': first_flight['duration'],
+                'duration': first_flight['duration'],  # Blkhr value
                 'duration_str': first_flight['duration_str'],
                 'carrier': first_flight['carrier'],
                 'flight': first_flight['flight_num'],
@@ -510,7 +523,7 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=2
                     
                     # Accept connections up to 48 hours wait (increased from 24)
                     if min_connection <= wait_time <= 2880:  # 48 hours = 2880 minutes
-                        new_total = total_duration + wait_time + next_flight['duration']
+                        new_total = total_duration + wait_time + next_flight['duration']  # duration is now from Blkhr
                         
                         new_route_info = route_info + [{
                             'from': current_airport,
@@ -518,25 +531,25 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=2
                             'date': next_flight['date'],
                             'departure': next_flight['dep_str'],
                             'arrival': next_flight['arr_str'],
-                            'duration': next_flight['duration'],
+                            'duration': next_flight['duration'],  # Blkhr value
                             'duration_str': next_flight['duration_str'],
                             'carrier': next_flight['carrier'],
                             'flight': next_flight['flight_num'],
                             'wait_time': wait_time
                         }]
                         
-                        # Calculate actual arrival date for the next flight
-                        next_arrival = next_flight['arrival']
+                        # Use the local arrival time for connection calculations
+                        next_arrival_minutes = next_flight['arrival']
                         next_arrival_date = next_flight['date']
-                        # If arrival time is less than departure, it's an overnight flight
-                        if next_flight['arrival'] < next_flight['departure']:
+                        
+                        # Check if flight arrives next day (when arrival > 24*60, it was adjusted for overnight)
+                        if next_flight['arrival'] > (24 * 60):
                             next_arrival_date = next_flight['date'] + timedelta(days=1)
-                            next_arrival = next_flight['arrival'] + (24 * 60)  # Add 24 hours for proper calculation
                         
                         queue.append((
                             next_flight['destination'],
                             path + [next_flight['destination']],
-                            next_arrival,
+                            next_arrival_minutes,
                             next_arrival_date,
                             new_total,
                             new_route_info
