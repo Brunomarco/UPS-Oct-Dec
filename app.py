@@ -418,12 +418,20 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=2
     
     # For each possible first flight (starting with earliest)
     for first_flight in initial_flights:
+        # Calculate actual arrival date and time for the first flight
+        first_arrival = first_flight['arrival']
+        first_arrival_date = first_flight['date']
+        # If arrival time is less than departure, it's an overnight flight
+        if first_flight['arrival'] < first_flight['departure']:
+            first_arrival_date = first_flight['date'] + timedelta(days=1)
+            first_arrival = first_flight['arrival'] + (24 * 60)  # Add 24 hours for proper calculation
+        
         # Start building routes from this first flight
         queue = [(
             first_flight['destination'],
             [origin, first_flight['destination']],
-            first_flight['arrival'],
-            first_flight['date'],
+            first_arrival,
+            first_arrival_date,
             first_flight['duration'],
             [{
                 'from': origin,
@@ -476,27 +484,29 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=2
                     # Calculate if this connection is valid
                     min_connection = 60  # 1 hour minimum
                     
+                    # Normalize arrival time to handle overnight flights
+                    # If arrival is > 24 hours, it means it arrived the next day
+                    normalized_arrival = last_arrival % (24 * 60) if last_arrival >= (24 * 60) else last_arrival
+                    actual_arrival_date = last_date
+                    if last_arrival >= (24 * 60):
+                        # Flight arrived the next day
+                        actual_arrival_date = last_date + timedelta(days=1)
+                    
                     # Check timing constraints
-                    if next_flight['date'] > last_date:
-                        # Flight is on a future day
-                        days_diff = (next_flight['date'].date() - last_date.date()).days
-                        # Calculate total wait time including overnight
-                        if last_arrival > (24 * 60):  # Handle overnight arrivals
-                            actual_arrival = last_arrival % (24 * 60)
-                        else:
-                            actual_arrival = last_arrival
-                        
+                    if next_flight['date'] > actual_arrival_date:
+                        # Flight is on a future day after arrival
+                        days_diff = (next_flight['date'].date() - actual_arrival_date.date()).days
                         # Time from arrival to midnight + days in between + time to departure
-                        wait_time = (24 * 60 - actual_arrival) + ((days_diff - 1) * 24 * 60) + next_flight['departure']
+                        wait_time = (24 * 60 - normalized_arrival) + ((days_diff - 1) * 24 * 60) + next_flight['departure']
                         
-                    elif next_flight['date'].date() == last_date.date():
-                        # Same day connection
-                        if next_flight['departure'] >= last_arrival + min_connection:
-                            wait_time = next_flight['departure'] - last_arrival
+                    elif next_flight['date'].date() == actual_arrival_date.date():
+                        # Same day connection (after accounting for overnight arrivals)
+                        if next_flight['departure'] >= normalized_arrival + min_connection:
+                            wait_time = next_flight['departure'] - normalized_arrival
                         else:
                             continue  # Too early, skip
                     else:
-                        continue  # Flight is before current date, skip
+                        continue  # Flight is before arrival date, skip
                     
                     # Accept connections up to 48 hours wait (increased from 24)
                     if min_connection <= wait_time <= 2880:  # 48 hours = 2880 minutes
@@ -515,11 +525,19 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=2
                             'wait_time': wait_time
                         }]
                         
+                        # Calculate actual arrival date for the next flight
+                        next_arrival = next_flight['arrival']
+                        next_arrival_date = next_flight['date']
+                        # If arrival time is less than departure, it's an overnight flight
+                        if next_flight['arrival'] < next_flight['departure']:
+                            next_arrival_date = next_flight['date'] + timedelta(days=1)
+                            next_arrival = next_flight['arrival'] + (24 * 60)  # Add 24 hours for proper calculation
+                        
                         queue.append((
                             next_flight['destination'],
                             path + [next_flight['destination']],
-                            next_flight['arrival'],
-                            next_flight['date'],
+                            next_arrival,
+                            next_arrival_date,
                             new_total,
                             new_route_info
                         ))
