@@ -418,7 +418,7 @@ def build_network(schedule_df, start_date, days_ahead=14):
     
     return network
 
-def find_connecting_routes(network, origin, destination, start_date, max_stops=2):
+def find_connecting_routes(network, origin, destination, start_date, max_stops=6):
     """Find ALL possible connecting flights - prioritize earliest first flight departure"""
     if origin not in network:
         return []
@@ -750,7 +750,8 @@ def display_route_results(origin, destination, selected_date, schedule_df):
                     **Suggestions:**
                     - This route may not be served by UPS flights
                     - Try selecting a different origin-destination pair
-                    - The route might require more than 2 stops
+                    - The route might require more than 6 stops
+                    - Check if flights operate on different days of the week
                     """)
             else:
                 if not direct_results:
