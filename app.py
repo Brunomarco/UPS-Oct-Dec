@@ -429,8 +429,21 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=6
     initial_flights = [f for f in network.get(origin, []) if f['date'] >= start_date]
     initial_flights.sort(key=lambda x: (x['date'], x['departure']))
     
+    # Limit initial flights to explore (take first 20 departures across next few days)
+    initial_flights = initial_flights[:20]
+    
+    # Track best duration found so far for pruning
+    best_duration = float('inf')
+    
     # For each possible first flight (starting with earliest)
     for first_flight in initial_flights:
+        # Skip if we already found 5 good routes and this starts later
+        if len(all_routes) >= 5 and all_routes:
+            min_existing_duration = min(r['total_duration'] for r in all_routes)
+            # If this first flight starts much later than our best routes, skip it
+            if first_flight['date'] > all_routes[0]['start_date'] + timedelta(days=2):
+                continue
+        
         # Use the actual arrival date and time from the flight data
         first_arrival_date = first_flight.get('arrival_date', first_flight['date'])
         first_arrival_time = first_flight['arrival']  # Local arrival time at destination
@@ -457,9 +470,16 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=6
         )]
         
         visited_for_this_start = set()
+        iterations = 0
+        max_iterations = 5000  # Limit iterations per starting flight
         
-        while queue:
+        while queue and iterations < max_iterations:
+            iterations += 1
             current_airport, path, last_arrival_time, last_arrival_date, total_duration, route_info = queue.pop(0)
+            
+            # Prune if this path is already too long compared to best found
+            if total_duration > best_duration * 1.5:  # Allow 50% worse than best
+                continue
             
             # Create unique state
             state = (current_airport, tuple(path), last_arrival_date.date(), last_arrival_time)
@@ -486,6 +506,14 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=6
                     'start_date': route_info[0]['date'],
                     'end_date': last_flight_arrival_date  # Actual arrival date
                 })
+                
+                # Update best duration for pruning
+                if total_duration < best_duration:
+                    best_duration = total_duration
+                
+                # Early termination if we found enough good routes
+                if len(all_routes) >= 15:
+                    break
                 continue
             
             # Check stop limit
@@ -494,9 +522,17 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=6
             
             # Find ALL possible next flights from current airport
             if current_airport in network:
-                # Get ALL future flights from this airport (including days ahead)
-                possible_connections = [f for f in network[current_airport] 
-                                       if f['destination'] not in path]  # Avoid cycles
+                # Get possible connections (limit to reasonable time window)
+                possible_connections = []
+                for f in network[current_airport]:
+                    if f['destination'] not in path:  # Avoid cycles
+                        # Only consider flights within 3 days of arrival
+                        if f['date'] <= last_arrival_date + timedelta(days=3):
+                            possible_connections.append(f)
+                
+                # Sort by departure date and time, take first 10 options
+                possible_connections.sort(key=lambda x: (x['date'], x['departure']))
+                possible_connections = possible_connections[:10]
                 
                 for next_flight in possible_connections:
                     # Calculate if this connection is valid
@@ -525,6 +561,10 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=6
                     if min_connection <= wait_time <= 2880:  # 48 hours = 2880 minutes
                         new_total = total_duration + wait_time + next_flight['duration']  # duration is now from Blkhr
                         
+                        # Skip if this path is getting too long
+                        if new_total > best_duration * 1.5:
+                            continue
+                        
                         new_route_info = route_info + [{
                             'from': current_airport,
                             'to': next_flight['destination'],
@@ -550,6 +590,10 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=6
                             new_total,
                             new_route_info
                         ))
+        
+        # If we have enough good routes, stop exploring more initial flights
+        if len(all_routes) >= 10:
+            break
     
     # Remove duplicate routes
     unique_routes = []
