@@ -591,11 +591,37 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=1
             seen_routes.add(route_id)
             unique_routes.append(route)
     
-    # Sort by: 1) Number of stops (fewer is better), 2) Total duration (shorter is better)
-    unique_routes.sort(key=lambda x: (x['stops'], x['total_duration']))
+    # Sort primarily by total duration (fastest first), then by number of stops
+    # This ensures we show the FASTEST routes first
+    unique_routes.sort(key=lambda x: (x['total_duration'], x['stops']))
     
-    # Return top routes
-    return unique_routes[:15]
+    # Get the top 15 fastest routes
+    fastest_routes = unique_routes[:15]
+    
+    # Also get the routes with fewest stops (for user preference)
+    unique_routes_by_stops = sorted(unique_routes, key=lambda x: (x['stops'], x['total_duration']))
+    fewest_stops_routes = unique_routes_by_stops[:5]
+    
+    # Combine both lists, prioritizing fastest but including some with fewer stops
+    final_routes = []
+    seen_in_final = set()
+    
+    # Add fastest routes first
+    for route in fastest_routes[:10]:
+        route_id = tuple([(leg['from'], leg['to'], leg['date'].date()) for leg in route['route_info']])
+        if route_id not in seen_in_final:
+            final_routes.append(route)
+            seen_in_final.add(route_id)
+    
+    # Add routes with fewest stops if they're not already included
+    for route in fewest_stops_routes:
+        route_id = tuple([(leg['from'], leg['to'], leg['date'].date()) for leg in route['route_info']])
+        if route_id not in seen_in_final and len(final_routes) < 15:
+            final_routes.append(route)
+            seen_in_final.add(route_id)
+    
+    # Return the best routes (fastest + some with fewer stops)
+    return final_routes[:15]
 
 def display_route_results(origin, destination, selected_date, schedule_df):
     """Common function to display route results"""
@@ -716,9 +742,11 @@ def display_route_results(origin, destination, selected_date, schedule_df):
                             st.markdown("### ✈️ Flight Segments:")
                             
                             for j, leg in enumerate(route['route_info'], 1):
-                                # Calculate arrival date for this leg
+                                # Calculate arrival date for this specific leg
+                                leg_departure_date = leg['date']
                                 leg_arrival_date = leg['date']
-                                # Check if arrival time suggests overnight flight
+                                
+                                # Check if this specific flight is overnight
                                 dep_minutes = parse_time_to_minutes(leg['departure'])
                                 arr_minutes = parse_time_to_minutes(leg['arrival'])
                                 if arr_minutes and dep_minutes and arr_minutes < dep_minutes:
@@ -734,14 +762,14 @@ def display_route_results(origin, destination, selected_date, schedule_df):
                                 
                                 with col1:
                                     st.markdown("**Date & Carrier**")
-                                    st.write(f"📅 Dep: {leg['date'].strftime('%Y-%m-%d')}")
+                                    st.write(f"📅 Dep: {leg_departure_date.strftime('%Y-%m-%d')}")
                                     st.write(f"📅 Arr: {leg_arrival_date.strftime('%Y-%m-%d')}")
                                     st.write(f"✈️ Carrier: {leg['carrier']}")
                                 
                                 with col2:
                                     st.markdown("**Flight Details**")
                                     st.write(f"Flight: {leg['flight']}")
-                                    st.write(f"Dep: {leg['departure']} ({leg['date'].strftime('%a')})")
+                                    st.write(f"Dep: {leg['departure']} ({leg_departure_date.strftime('%a')})")
                                     st.write(f"Arr: {leg['arrival']} ({leg_arrival_date.strftime('%a')})")
                                 
                                 with col3:
