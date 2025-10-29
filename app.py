@@ -294,33 +294,10 @@ def find_direct_flights(schedule_df, origin, destination, date, days_ahead=7):
             return []
         
         results = []
+        all_flights_with_arrival = []
         
-        # FIRST: Check for same-day flights
-        same_day_flights = []
-        for idx, flight in route_flights.iterrows():
-            try:
-                if is_flight_available_on_date(flight['DOW(S)'], date):
-                    if pd.notna(flight['Start Date (LZ)']) and pd.notna(flight['End Date (LZ)']):
-                        if flight['Start Date (LZ)'].date() <= date.date() <= flight['End Date (LZ)'].date():
-                            flight_copy = flight.copy()
-                            flight_copy['flight_date'] = date
-                            dep_time = parse_time_to_minutes(flight['Sched Out(L)'])
-                            flight_copy['dep_minutes'] = dep_time if dep_time else 0
-                            same_day_flights.append(flight_copy)
-            except:
-                continue
-        
-        # If same-day flights exist, return ONLY those
-        if same_day_flights:
-            same_day_flights.sort(key=lambda x: x['dep_minutes'])
-            return [{
-                'date': date,
-                'flights': same_day_flights,
-                'days_from_requested': 0
-            }]
-        
-        # NO same-day flights - now search next 7 days
-        for day_offset in range(1, days_ahead + 1):
+        # FIRST: Check for same-day flights AND next 3 days to compare arrivals
+        for day_offset in range(0, 4):  # Check selected day + next 3 days
             check_date = date + timedelta(days=day_offset)
             flights_on_date = []
             
@@ -332,22 +309,89 @@ def find_direct_flights(schedule_df, origin, destination, date, days_ahead=7):
                                 flight_copy = flight.copy()
                                 flight_copy['flight_date'] = check_date
                                 dep_time = parse_time_to_minutes(flight['Sched Out(L)'])
+                                arr_time = parse_time_to_minutes(flight['Sched In(L)'])
                                 flight_copy['dep_minutes'] = dep_time if dep_time else 0
+                                flight_copy['arr_minutes'] = arr_time if arr_time else 0
+                                
+                                # Calculate actual arrival datetime for comparison
+                                arrival_date = check_date
+                                if arr_time and dep_time and arr_time < dep_time:
+                                    arrival_date = check_date + timedelta(days=1)
+                                
+                                # Store arrival datetime for comparison
+                                if arr_time is not None:
+                                    flight_copy['arrival_datetime'] = arrival_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=arr_time)
+                                else:
+                                    flight_copy['arrival_datetime'] = arrival_date
+                                
+                                flight_copy['day_offset'] = day_offset
                                 flights_on_date.append(flight_copy)
+                                all_flights_with_arrival.append(flight_copy)
                 except:
                     continue
             
-            if flights_on_date:
+            if flights_on_date and day_offset == 0:
+                # Add same-day flights to results
                 flights_on_date.sort(key=lambda x: x['dep_minutes'])
                 results.append({
                     'date': check_date,
                     'flights': flights_on_date,
-                    'days_from_requested': day_offset
+                    'days_from_requested': day_offset,
+                    'arrives_earlier': False
                 })
+        
+        # Now check if any flights from days 1-3 arrive EARLIER than same-day flights
+        if results and len(results) > 0:  # We have same-day flights
+            same_day_flights = results[0]['flights']
+            earliest_same_day_arrival = min(f['arrival_datetime'] for f in same_day_flights)
+            
+            # Check next 3 days for earlier arrivals
+            for day_offset in range(1, 4):
+                check_date = date + timedelta(days=day_offset)
+                earlier_flights = [f for f in all_flights_with_arrival 
+                                  if f['day_offset'] == day_offset 
+                                  and f['arrival_datetime'] < earliest_same_day_arrival]
                 
-                # Return up to 3 alternative dates
-                if len(results) >= 3:
-                    break
+                if earlier_flights:
+                    earlier_flights.sort(key=lambda x: x['arrival_datetime'])
+                    results.append({
+                        'date': check_date,
+                        'flights': earlier_flights,
+                        'days_from_requested': day_offset,
+                        'arrives_earlier': True  # Flag these as arriving earlier
+                    })
+        
+        # If no same-day flights, search normally for next available
+        if not results:
+            for day_offset in range(1, days_ahead + 1):
+                check_date = date + timedelta(days=day_offset)
+                flights_on_date = []
+                
+                for idx, flight in route_flights.iterrows():
+                    try:
+                        if is_flight_available_on_date(flight['DOW(S)'], check_date):
+                            if pd.notna(flight['Start Date (LZ)']) and pd.notna(flight['End Date (LZ)']):
+                                if flight['Start Date (LZ)'].date() <= check_date.date() <= flight['End Date (LZ)'].date():
+                                    flight_copy = flight.copy()
+                                    flight_copy['flight_date'] = check_date
+                                    dep_time = parse_time_to_minutes(flight['Sched Out(L)'])
+                                    flight_copy['dep_minutes'] = dep_time if dep_time else 0
+                                    flights_on_date.append(flight_copy)
+                    except:
+                        continue
+                
+                if flights_on_date:
+                    flights_on_date.sort(key=lambda x: x['dep_minutes'])
+                    results.append({
+                        'date': check_date,
+                        'flights': flights_on_date,
+                        'days_from_requested': day_offset,
+                        'arrives_earlier': False
+                    })
+                    
+                    # Return up to 3 alternative dates
+                    if len(results) >= 3:
+                        break
         
         return results
         
@@ -419,17 +463,18 @@ def build_network(schedule_df, start_date, days_ahead=30):
     return network
 
 def find_connecting_routes(network, origin, destination, start_date, max_stops=10):
-    """Find ALL possible connecting flights - comprehensive search"""
+    """Find ALL possible connecting flights - comprehensive search including next 3 days for earlier arrivals"""
     if origin not in network:
         return []
     
     all_routes = []
     
-    # Get ALL flights from origin within reasonable timeframe
-    initial_flights = [f for f in network.get(origin, []) if f['date'] >= start_date and f['date'] <= start_date + timedelta(days=14)]
+    # Get flights from origin within selected date + next 3 days for comparison
+    # This allows finding routes that depart later but arrive earlier
+    initial_flights = [f for f in network.get(origin, []) 
+                      if f['date'] >= start_date 
+                      and f['date'] <= start_date + timedelta(days=3)]
     initial_flights.sort(key=lambda x: (x['date'], x['departure']))
-    
-    # Don't limit initial flights - check all available
     
     # For each possible first flight
     for first_flight in initial_flights:
@@ -488,13 +533,20 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=1
                 if arr_min and dep_min and arr_min < dep_min:
                     last_flight_arrival_date = last_leg_info['date'] + timedelta(days=1)
                 
+                # Calculate actual arrival datetime for comparison
+                if arr_min is not None:
+                    arrival_datetime = last_flight_arrival_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=arr_min)
+                else:
+                    arrival_datetime = last_flight_arrival_date
+                
                 all_routes.append({
                     'path': path,
                     'stops': len(path) - 2,
                     'total_duration': total_duration,
                     'route_info': route_info,
                     'start_date': route_info[0]['date'],
-                    'end_date': last_flight_arrival_date  # Actual arrival date
+                    'end_date': last_flight_arrival_date,  # Actual arrival date
+                    'arrival_datetime': arrival_datetime  # For comparison
                 })
                 continue
             
@@ -591,6 +643,19 @@ def find_connecting_routes(network, origin, destination, start_date, max_stops=1
             seen_routes.add(route_id)
             unique_routes.append(route)
     
+    # Mark routes that depart later but arrive earlier
+    same_day_routes = [r for r in unique_routes if r['start_date'].date() == start_date.date()]
+    later_departure_routes = [r for r in unique_routes if r['start_date'].date() > start_date.date()]
+    
+    if same_day_routes and later_departure_routes:
+        # Find earliest arrival among same-day departures
+        earliest_same_day_arrival = min(r.get('arrival_datetime', r['end_date']) for r in same_day_routes)
+        
+        # Mark routes that depart later but arrive earlier
+        for route in later_departure_routes:
+            if route.get('arrival_datetime', route['end_date']) < earliest_same_day_arrival:
+                route['arrives_earlier'] = True
+    
     # Sort primarily by total duration (fastest first), then by number of stops
     # This ensures we show the FASTEST routes first
     unique_routes.sort(key=lambda x: (x['total_duration'], x['stops']))
@@ -634,18 +699,26 @@ def display_route_results(origin, destination, selected_date, schedule_df):
             
             if direct_results:
                 # Check if we have same-day flights
-                has_same_day = (direct_results[0]['days_from_requested'] == 0)
+                has_same_day = any(r['days_from_requested'] == 0 for r in direct_results)
+                has_earlier_arrivals = any(r.get('arrives_earlier', False) for r in direct_results)
                 
                 if has_same_day:
                     st.success(f"✅ Found direct flights on your selected date ({selected_date})!")
+                    if has_earlier_arrivals:
+                        st.info("💡 Also found flights departing later but arriving EARLIER than same-day options!")
                 else:
                     st.warning(f"⚠️ No flights available on {selected_date}. Showing next available dates.")
                 
                 for result in direct_results:
                     date_diff = result['days_from_requested']
+                    arrives_earlier = result.get('arrives_earlier', False)
+                    
                     if date_diff == 0:
                         date_label = "✓ ON YOUR SELECTED DATE"
                         color = "green"
+                    elif arrives_earlier:
+                        date_label = f"🌟 DEPARTS LATER BUT ARRIVES EARLIER! (+{date_diff} day(s) departure)"
+                        color = "blue"
                     else:
                         date_label = f"📅 Next available: +{date_diff} day(s)"
                         color = "orange"
@@ -720,7 +793,14 @@ def display_route_results(origin, destination, selected_date, schedule_df):
                         
                         # Check if departing on selected date
                         is_same_day = route['start_date'].date() == search_date.date()
-                        date_indicator = "✓ DEPARTS ON SELECTED DATE" if is_same_day else f"Departs +{(route['start_date'].date() - search_date.date()).days} days"
+                        arrives_earlier = route.get('arrives_earlier', False)
+                        
+                        if is_same_day:
+                            date_indicator = "✓ DEPARTS ON SELECTED DATE"
+                        elif arrives_earlier:
+                            date_indicator = f"🌟 Departs +{(route['start_date'].date() - search_date.date()).days} days BUT ARRIVES EARLIER!"
+                        else:
+                            date_indicator = f"Departs +{(route['start_date'].date() - search_date.date()).days} days"
                         
                         with st.expander(f"🔄 Route {i}: {route_str} ({route['stops']} stop(s)) - {date_indicator}", 
                                        expanded=(i == 1 and is_same_day)):
