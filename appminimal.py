@@ -412,9 +412,13 @@ def build_network(schedule_df, start_date, days_ahead=7):
 def find_all_routes_for_date(network, origin, destination, target_date, max_stops=10):
     """
     Find routes that DEPART on the target_date.
-    Uses TWO separate searches:
-    1. One prioritizing ARRIVAL TIME (to find fastest arriving routes)
-    2. One prioritizing FEWER STOPS (to find routes with minimum connections)
+    
+    FEWEST STOPS: Uses level-by-level BFS to GUARANTEE finding minimum stops.
+    - First checks 0 stops (direct flights)
+    - Then checks 1 stop (all CGN→X→BFI combinations)
+    - Then checks 2 stops, etc.
+    
+    FASTEST ARRIVING: Explores ALL routes and returns those arriving earliest.
     """
     if origin not in network:
         return []
@@ -428,18 +432,71 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
     if not initial_flights:
         return []
     
-    initial_flights.sort(key=lambda x: x['departure'])
-    
-    def search_routes(priority_mode='arrival'):
+    # ================================================================
+    # SEARCH 1: Find routes with FEWEST STOPS (level-by-level BFS)
+    # This GUARANTEES finding the minimum number of stops
+    # ================================================================
+    def find_fewest_stops_routes():
         """
-        Search for routes with different priority modes:
-        - 'arrival': prioritize by arrival time (finds fastest routes)
-        - 'stops': prioritize by number of stops (finds shortest routes)
+        Level-by-level search:
+        Level 0: Direct flights (0 stops)
+        Level 1: One intermediate stop
+        Level 2: Two intermediate stops
+        etc.
         """
         routes_found = []
-        counter = 0
+        min_stops_found = None
         
+        # ============ LEVEL 0: Direct flights (0 stops) ============
         for first_flight in initial_flights:
+            if first_flight['destination'] == destination:
+                first_arrival_date = first_flight.get('arrival_date', first_flight['date'])
+                first_arrival_time = first_flight['arrival']
+                
+                if first_arrival_time is not None:
+                    arrival_datetime = first_arrival_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=first_arrival_time)
+                else:
+                    arrival_datetime = first_arrival_date
+                
+                routes_found.append({
+                    'path': [origin, destination],
+                    'stops': 0,
+                    'total_duration': first_flight['duration'],
+                    'route_info': [{
+                        'from': origin,
+                        'to': destination,
+                        'date': first_flight['date'],
+                        'departure': first_flight['dep_str'],
+                        'arrival': first_flight['arr_str'],
+                        'duration': first_flight['duration'],
+                        'duration_str': first_flight['duration_str'],
+                        'carrier': first_flight['carrier'],
+                        'flight': first_flight['flight_num'],
+                        'wait_time': 0
+                    }],
+                    'start_date': first_flight['date'],
+                    'end_date': first_arrival_date,
+                    'arrival_datetime': arrival_datetime
+                })
+                min_stops_found = 0
+        
+        # If we found direct flights, return them (0 stops is minimum)
+        if min_stops_found == 0:
+            return routes_found
+        
+        # ============ LEVEL 1+: Routes with stops ============
+        # Use BFS exploring ALL connections at each level
+        
+        from collections import deque
+        
+        # Queue entries: (path, last_arrival_time, last_arrival_date, route_info, total_duration)
+        queue = deque()
+        
+        # Initialize with all first flights (that don't go directly to destination)
+        for first_flight in initial_flights:
+            if first_flight['destination'] == destination:
+                continue  # Already handled above
+            
             first_arrival_date = first_flight.get('arrival_date', first_flight['date'])
             first_arrival_time = first_flight['arrival']
             
@@ -448,13 +505,14 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
             else:
                 first_arrival_datetime = first_arrival_date
             
-            initial_state = (
-                first_flight['destination'],
-                [origin, first_flight['destination']],
-                first_arrival_time,
-                first_arrival_date,
-                first_flight['duration'],
-                [{
+            queue.append({
+                'current': first_flight['destination'],
+                'path': [origin, first_flight['destination']],
+                'arrival_time': first_arrival_time,
+                'arrival_date': first_arrival_date,
+                'arrival_datetime': first_arrival_datetime,
+                'total_duration': first_flight['duration'],
+                'route_info': [{
                     'from': origin,
                     'to': first_flight['destination'],
                     'date': first_flight['date'],
@@ -466,173 +524,296 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
                     'flight': first_flight['flight_num'],
                     'wait_time': 0
                 }],
-                first_arrival_datetime
-            )
+                'stops': 0  # Current intermediate stops (will be 1 when we reach dest)
+            })
+        
+        visited = set()
+        
+        while queue:
+            state = queue.popleft()
             
-            pq = []
+            current = state['current']
+            path = state['path']
+            current_stops = state['stops']
             
-            # Different priority based on mode
-            if priority_mode == 'arrival':
-                # Prioritize by arrival time
-                heapq.heappush(pq, (first_arrival_datetime.timestamp(), 0, counter, initial_state))
-            else:
-                # Prioritize by number of stops (fewer = better)
-                heapq.heappush(pq, (0, first_arrival_datetime.timestamp(), counter, initial_state))
+            # If we already found routes with fewer stops, skip
+            if min_stops_found is not None and current_stops >= min_stops_found:
+                continue
             
-            counter += 1
+            # Skip if too many stops
+            if current_stops >= max_stops:
+                continue
             
-            visited = set()
-            iterations = 0
-            max_iterations = 15000
+            state_key = (current, tuple(path))
+            if state_key in visited:
+                continue
+            visited.add(state_key)
             
-            while pq and iterations < max_iterations:
-                iterations += 1
+            last_arrival_time = state['arrival_time']
+            last_arrival_date = state['arrival_date']
+            
+            # Check ALL flights from current airport
+            if current not in network:
+                continue
+            
+            for next_flight in network[current]:
+                # Skip if creates a cycle
+                if next_flight['destination'] in path:
+                    continue
                 
-                if priority_mode == 'arrival':
-                    priority_arrival, priority_stops, _, state = heapq.heappop(pq)
+                # Check connection timing
+                if next_flight['date'] < last_arrival_date:
+                    continue
+                if next_flight['date'] > last_arrival_date + timedelta(days=3):
+                    continue
+                
+                min_connection = 60  # 1 hour minimum
+                
+                # Calculate wait time
+                if next_flight['date'].date() > last_arrival_date.date():
+                    days_diff = (next_flight['date'].date() - last_arrival_date.date()).days
+                    wait_time = (1440 - last_arrival_time) + ((days_diff - 1) * 1440) + next_flight['departure']
+                elif next_flight['date'].date() == last_arrival_date.date():
+                    if next_flight['departure'] >= last_arrival_time + min_connection:
+                        wait_time = next_flight['departure'] - last_arrival_time
+                    else:
+                        continue  # Not enough connection time
                 else:
-                    priority_stops, priority_arrival, _, state = heapq.heappop(pq)
-                
-                current_airport, path, last_arrival_time, last_arrival_date, total_duration, route_info, current_arrival_dt = state
-                
-                current_stops = len(path) - 2
-                
-                state_key = (current_airport, tuple(path))
-                if state_key in visited:
                     continue
-                visited.add(state_key)
                 
-                # Reached destination
-                if current_airport == destination:
-                    last_leg_info = route_info[-1]
-                    last_flight_arrival_date = last_leg_info['date']
-                    dep_min = parse_time_to_minutes(last_leg_info['departure'])
-                    arr_min = parse_time_to_minutes(last_leg_info['arrival'])
-                    if arr_min and dep_min and arr_min < dep_min:
-                        last_flight_arrival_date = last_leg_info['date'] + timedelta(days=1)
-                    
-                    if arr_min is not None:
-                        arrival_datetime = last_flight_arrival_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=arr_min)
-                    else:
-                        arrival_datetime = last_flight_arrival_date
-                    
-                    stops = len(path) - 2
-                    
-                    routes_found.append({
-                        'path': path,
-                        'stops': stops,
-                        'total_duration': total_duration,
-                        'route_info': route_info,
-                        'start_date': route_info[0]['date'],
-                        'end_date': last_flight_arrival_date,
-                        'arrival_datetime': arrival_datetime
+                if wait_time < min_connection or wait_time > 1440:
+                    continue
+                
+                # Valid connection found!
+                next_arrival_date = next_flight.get('arrival_date', next_flight['date'])
+                next_arrival_time = next_flight['arrival']
+                
+                if next_arrival_time is not None:
+                    next_arrival_datetime = next_arrival_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=next_arrival_time)
+                else:
+                    next_arrival_datetime = next_arrival_date
+                
+                new_route_info = state['route_info'] + [{
+                    'from': current,
+                    'to': next_flight['destination'],
+                    'date': next_flight['date'],
+                    'departure': next_flight['dep_str'],
+                    'arrival': next_flight['arr_str'],
+                    'duration': next_flight['duration'],
+                    'duration_str': next_flight['duration_str'],
+                    'carrier': next_flight['carrier'],
+                    'flight': next_flight['flight_num'],
+                    'wait_time': wait_time
+                }]
+                
+                new_path = path + [next_flight['destination']]
+                new_stops = current_stops + 1
+                new_duration = state['total_duration'] + wait_time + next_flight['duration']
+                
+                # Check if we reached destination
+                if next_flight['destination'] == destination:
+                    # Found a route!
+                    if min_stops_found is None or new_stops <= min_stops_found:
+                        min_stops_found = new_stops
+                        routes_found.append({
+                            'path': new_path,
+                            'stops': new_stops,
+                            'total_duration': new_duration,
+                            'route_info': new_route_info,
+                            'start_date': new_route_info[0]['date'],
+                            'end_date': next_arrival_date,
+                            'arrival_datetime': next_arrival_datetime
+                        })
+                else:
+                    # Continue searching - add to queue
+                    queue.append({
+                        'current': next_flight['destination'],
+                        'path': new_path,
+                        'arrival_time': next_arrival_time,
+                        'arrival_date': next_arrival_date,
+                        'arrival_datetime': next_arrival_datetime,
+                        'total_duration': new_duration,
+                        'route_info': new_route_info,
+                        'stops': new_stops
                     })
-                    
-                    # Early termination
-                    if len(routes_found) >= 30:
-                        break
-                    continue
-                
-                # Check stop limit
-                if len(path) - 1 >= max_stops + 1:
-                    continue
-                
-                # Find connecting flights
-                if current_airport in network:
-                    valid_connections = []
-                    for next_flight in network[current_airport]:
-                        if next_flight['destination'] in path:
-                            continue
-                        
-                        if next_flight['date'] < last_arrival_date:
-                            continue
-                        if next_flight['date'] > last_arrival_date + timedelta(days=3):
-                            continue
-                        
-                        min_connection = 60
-                        
-                        if next_flight['date'].date() > last_arrival_date.date():
-                            days_diff = (next_flight['date'].date() - last_arrival_date.date()).days
-                            wait_time = (1440 - last_arrival_time) + ((days_diff - 1) * 1440) + next_flight['departure']
-                        elif next_flight['date'].date() == last_arrival_date.date():
-                            if next_flight['departure'] >= last_arrival_time + min_connection:
-                                wait_time = next_flight['departure'] - last_arrival_time
-                            else:
-                                continue
-                        else:
-                            continue
-                        
-                        if wait_time < min_connection or wait_time > 1440:
-                            continue
-                        
-                        valid_connections.append((next_flight, wait_time))
-                    
-                    # Sort and limit connections based on mode
-                    if priority_mode == 'arrival':
-                        # Sort by arrival time for fastest routes
-                        valid_connections.sort(key=lambda x: x[0]['arrival_datetime'])
-                    else:
-                        # For fewest stops, prefer flights going to destination or major hubs
-                        valid_connections.sort(key=lambda x: (
-                            0 if x[0]['destination'] == destination else 1,
-                            x[0]['arrival_datetime']
-                        ))
-                    
-                    # Explore top connections
-                    for next_flight, wait_time in valid_connections[:8]:
-                        new_total = total_duration + wait_time + next_flight['duration']
-                        
-                        new_route_info = route_info + [{
-                            'from': current_airport,
-                            'to': next_flight['destination'],
-                            'date': next_flight['date'],
-                            'departure': next_flight['dep_str'],
-                            'arrival': next_flight['arr_str'],
-                            'duration': next_flight['duration'],
-                            'duration_str': next_flight['duration_str'],
-                            'carrier': next_flight['carrier'],
-                            'flight': next_flight['flight_num'],
-                            'wait_time': wait_time
-                        }]
-                        
-                        next_arrival_date = next_flight.get('arrival_date', next_flight['date'])
-                        next_arrival_time = next_flight['arrival']
-                        
-                        if next_arrival_time is not None:
-                            next_arrival_datetime = next_arrival_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=next_arrival_time)
-                        else:
-                            next_arrival_datetime = next_arrival_date
-                        
-                        new_state = (
-                            next_flight['destination'],
-                            path + [next_flight['destination']],
-                            next_arrival_time,
-                            next_arrival_date,
-                            new_total,
-                            new_route_info,
-                            next_arrival_datetime
-                        )
-                        
-                        new_stops = len(path) - 1
-                        
-                        if priority_mode == 'arrival':
-                            heapq.heappush(pq, (next_arrival_datetime.timestamp(), new_stops, counter, new_state))
-                        else:
-                            heapq.heappush(pq, (new_stops, next_arrival_datetime.timestamp(), counter, new_state))
-                        
-                        counter += 1
+        
+        # Filter to only routes with minimum stops
+        if routes_found:
+            actual_min = min(r['stops'] for r in routes_found)
+            routes_found = [r for r in routes_found if r['stops'] == actual_min]
+        
+        return routes_found
+    
+    # ================================================================
+    # SEARCH 2: Find FASTEST ARRIVING routes
+    # Explores ALL routes and returns those arriving earliest
+    # ================================================================
+    def find_fastest_routes():
+        """Find routes that arrive earliest at destination"""
+        routes_found = []
+        
+        from collections import deque
+        queue = deque()
+        
+        # Initialize with all first flights
+        for first_flight in initial_flights:
+            first_arrival_date = first_flight.get('arrival_date', first_flight['date'])
+            first_arrival_time = first_flight['arrival']
             
-            if len(routes_found) >= 30:
-                break
+            if first_arrival_time is not None:
+                first_arrival_datetime = first_arrival_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=first_arrival_time)
+            else:
+                first_arrival_datetime = first_arrival_date
+            
+            # Check if direct to destination
+            if first_flight['destination'] == destination:
+                routes_found.append({
+                    'path': [origin, destination],
+                    'stops': 0,
+                    'total_duration': first_flight['duration'],
+                    'route_info': [{
+                        'from': origin,
+                        'to': destination,
+                        'date': first_flight['date'],
+                        'departure': first_flight['dep_str'],
+                        'arrival': first_flight['arr_str'],
+                        'duration': first_flight['duration'],
+                        'duration_str': first_flight['duration_str'],
+                        'carrier': first_flight['carrier'],
+                        'flight': first_flight['flight_num'],
+                        'wait_time': 0
+                    }],
+                    'start_date': first_flight['date'],
+                    'end_date': first_arrival_date,
+                    'arrival_datetime': first_arrival_datetime
+                })
+            else:
+                queue.append({
+                    'current': first_flight['destination'],
+                    'path': [origin, first_flight['destination']],
+                    'arrival_time': first_arrival_time,
+                    'arrival_date': first_arrival_date,
+                    'arrival_datetime': first_arrival_datetime,
+                    'total_duration': first_flight['duration'],
+                    'route_info': [{
+                        'from': origin,
+                        'to': first_flight['destination'],
+                        'date': first_flight['date'],
+                        'departure': first_flight['dep_str'],
+                        'arrival': first_flight['arr_str'],
+                        'duration': first_flight['duration'],
+                        'duration_str': first_flight['duration_str'],
+                        'carrier': first_flight['carrier'],
+                        'flight': first_flight['flight_num'],
+                        'wait_time': 0
+                    }]
+                })
+        
+        visited = set()
+        iterations = 0
+        max_iterations = 100000
+        
+        while queue and iterations < max_iterations:
+            iterations += 1
+            state = queue.popleft()
+            
+            current = state['current']
+            path = state['path']
+            
+            # Skip if too many stops
+            if len(path) - 1 >= max_stops + 1:
+                continue
+            
+            state_key = (current, tuple(path))
+            if state_key in visited:
+                continue
+            visited.add(state_key)
+            
+            last_arrival_time = state['arrival_time']
+            last_arrival_date = state['arrival_date']
+            
+            if current not in network:
+                continue
+            
+            # Check ALL flights from current airport
+            for next_flight in network[current]:
+                if next_flight['destination'] in path:
+                    continue
+                
+                if next_flight['date'] < last_arrival_date:
+                    continue
+                if next_flight['date'] > last_arrival_date + timedelta(days=3):
+                    continue
+                
+                min_connection = 60
+                
+                if next_flight['date'].date() > last_arrival_date.date():
+                    days_diff = (next_flight['date'].date() - last_arrival_date.date()).days
+                    wait_time = (1440 - last_arrival_time) + ((days_diff - 1) * 1440) + next_flight['departure']
+                elif next_flight['date'].date() == last_arrival_date.date():
+                    if next_flight['departure'] >= last_arrival_time + min_connection:
+                        wait_time = next_flight['departure'] - last_arrival_time
+                    else:
+                        continue
+                else:
+                    continue
+                
+                if wait_time < min_connection or wait_time > 1440:
+                    continue
+                
+                next_arrival_date = next_flight.get('arrival_date', next_flight['date'])
+                next_arrival_time = next_flight['arrival']
+                
+                if next_arrival_time is not None:
+                    next_arrival_datetime = next_arrival_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=next_arrival_time)
+                else:
+                    next_arrival_datetime = next_arrival_date
+                
+                new_route_info = state['route_info'] + [{
+                    'from': current,
+                    'to': next_flight['destination'],
+                    'date': next_flight['date'],
+                    'departure': next_flight['dep_str'],
+                    'arrival': next_flight['arr_str'],
+                    'duration': next_flight['duration'],
+                    'duration_str': next_flight['duration_str'],
+                    'carrier': next_flight['carrier'],
+                    'flight': next_flight['flight_num'],
+                    'wait_time': wait_time
+                }]
+                
+                new_path = path + [next_flight['destination']]
+                new_duration = state['total_duration'] + wait_time + next_flight['duration']
+                
+                if next_flight['destination'] == destination:
+                    routes_found.append({
+                        'path': new_path,
+                        'stops': len(new_path) - 2,
+                        'total_duration': new_duration,
+                        'route_info': new_route_info,
+                        'start_date': new_route_info[0]['date'],
+                        'end_date': next_arrival_date,
+                        'arrival_datetime': next_arrival_datetime
+                    })
+                else:
+                    queue.append({
+                        'current': next_flight['destination'],
+                        'path': new_path,
+                        'arrival_time': next_arrival_time,
+                        'arrival_date': next_arrival_date,
+                        'arrival_datetime': next_arrival_datetime,
+                        'total_duration': new_duration,
+                        'route_info': new_route_info
+                    })
         
         return routes_found
     
     # Run BOTH searches
-    routes_by_arrival = search_routes('arrival')
-    routes_by_stops = search_routes('stops')
+    fewest_stops_routes = find_fewest_stops_routes()
+    fastest_routes = find_fastest_routes()
     
     # Combine all routes
-    all_routes = routes_by_arrival + routes_by_stops
+    all_routes = fewest_stops_routes + fastest_routes
     
     # Remove duplicates
     unique_routes = []
