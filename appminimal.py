@@ -625,23 +625,6 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
             unique_routes.append(route)
     
     return unique_routes
-                    counter += 1
-    
-    # Remove duplicates
-    unique_routes = []
-    seen_routes = set()
-    
-    for route in all_routes:
-        route_id = tuple([
-            (leg['from'], leg['to'], leg['date'].date(), leg['departure'])
-            for leg in route['route_info']
-        ])
-        
-        if route_id not in seen_routes:
-            seen_routes.add(route_id)
-            unique_routes.append(route)
-    
-    return unique_routes
 
 def get_fastest_and_fewest_stops_routes(all_routes_same_day):
     """
