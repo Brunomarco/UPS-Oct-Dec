@@ -344,8 +344,8 @@ def find_direct_flights(schedule_df, origin, destination, date, days_ahead=7):
     except Exception as e:
         return []
 
-def build_network(schedule_df, start_date, days_ahead=30):
-    """Build flight network for routing with proper date/time logic"""
+def build_network(schedule_df, start_date, days_ahead=7):
+    """Build flight network for routing with proper date/time logic - OPTIMIZED"""
     network = {}
     
     try:
@@ -380,11 +380,15 @@ def build_network(schedule_df, start_date, days_ahead=30):
                                     if arr_time < dep_time:
                                         arrival_date = check_date + timedelta(days=1)
                                     
+                                    # Pre-calculate arrival_datetime for faster sorting later
+                                    arrival_datetime = arrival_date.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=arr_time)
+                                    
                                     network[origin].append({
                                         'destination': dest,
                                         'departure': dep_time,
                                         'arrival': arr_time,
                                         'arrival_date': arrival_date,
+                                        'arrival_datetime': arrival_datetime,
                                         'dep_str': str(flight['Sched Out(L)']),
                                         'arr_str': str(flight['Sched In(L)']),
                                         'duration_str': str(flight['Blkhr']),
@@ -399,15 +403,16 @@ def build_network(schedule_df, start_date, days_ahead=30):
     except:
         pass
     
+    # Sort flights by arrival time for each origin (helps with pruning later)
     for origin in network:
-        network[origin].sort(key=lambda x: (x['date'], x['departure']))
+        network[origin].sort(key=lambda x: (x['date'], x['arrival_datetime']))
     
     return network
 
 def find_all_routes_for_date(network, origin, destination, target_date, max_stops=10):
     """
-    Find ALL possible routes that DEPART on the target_date.
-    Returns a list of all valid routes departing on the specified date.
+    Find routes that DEPART on the target_date.
+    Optimized for speed while finding both fastest arriving and fewest stops routes.
     """
     if origin not in network:
         return []
@@ -422,6 +427,10 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
         return []
     
     initial_flights.sort(key=lambda x: x['departure'])
+    
+    # Track best results for early termination
+    best_arrival_time = None
+    min_stops_found = max_stops + 1
     
     counter = 0
     
@@ -455,21 +464,26 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
             first_arrival_datetime
         )
         
-        # Use priority queue: prioritize by ARRIVAL TIME to find fastest routes first
-        # But we continue searching to find ALL routes
+        # Priority queue: prioritize by arrival time
         pq = []
         heapq.heappush(pq, (first_arrival_datetime.timestamp(), counter, initial_state))
         counter += 1
         
         visited = set()
         iterations = 0
-        max_iterations = 100000  # Increased for more thorough search
+        max_iterations = 10000  # Reduced for speed
         
         while pq and iterations < max_iterations:
             iterations += 1
             
             priority_arrival, _, state = heapq.heappop(pq)
             current_airport, path, last_arrival_time, last_arrival_date, total_duration, route_info, current_arrival_dt = state
+            
+            current_stops = len(path) - 2
+            
+            # Pruning: if we already have many routes and this path has too many stops, skip
+            if len(all_routes) >= 20 and current_stops > min_stops_found + 2:
+                continue
             
             state_key = (current_airport, tuple(path))
             if state_key in visited:
@@ -490,24 +504,37 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
                 else:
                     arrival_datetime = last_flight_arrival_date
                 
+                stops = len(path) - 2
+                
+                # Update tracking
+                if best_arrival_time is None or arrival_datetime < best_arrival_time:
+                    best_arrival_time = arrival_datetime
+                if stops < min_stops_found:
+                    min_stops_found = stops
+                
                 all_routes.append({
                     'path': path,
-                    'stops': len(path) - 2,  # Number of intermediate stops
+                    'stops': stops,
                     'total_duration': total_duration,
                     'route_info': route_info,
                     'start_date': route_info[0]['date'],
                     'end_date': last_flight_arrival_date,
                     'arrival_datetime': arrival_datetime
                 })
-                continue  # Continue to find more routes
-            
-            # Check stop limit
-            current_stops = len(path) - 1
-            if current_stops >= max_stops + 1:
+                
+                # Early termination: if we have enough routes, stop this branch
+                if len(all_routes) >= 50:
+                    break
                 continue
             
-            # Find connecting flights
+            # Check stop limit
+            if len(path) - 1 >= max_stops + 1:
+                continue
+            
+            # Find connecting flights - OPTIMIZED: only check flights that could improve results
             if current_airport in network:
+                # Pre-filter flights for this connection
+                valid_connections = []
                 for next_flight in network[current_airport]:
                     if next_flight['destination'] in path:
                         continue
@@ -515,11 +542,11 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
                     # Connection must be AFTER arrival
                     if next_flight['date'] < last_arrival_date:
                         continue
-                    # Don't allow connections more than 7 days out
-                    if next_flight['date'] > last_arrival_date + timedelta(days=7):
+                    # Limit to 3 days for connections (faster search)
+                    if next_flight['date'] > last_arrival_date + timedelta(days=3):
                         continue
                     
-                    min_connection = 60  # 1 hour minimum
+                    min_connection = 60
                     
                     # Calculate waiting time
                     if next_flight['date'].date() > last_arrival_date.date():
@@ -529,14 +556,20 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
                         if next_flight['departure'] >= last_arrival_time + min_connection:
                             wait_time = next_flight['departure'] - last_arrival_time
                         else:
-                            continue  # Not enough connection time
+                            continue
                     else:
                         continue
                     
-                    # Connection time constraints
-                    if wait_time < min_connection or wait_time > 1440:  # Max 24h wait
+                    if wait_time < min_connection or wait_time > 1440:
                         continue
                     
+                    valid_connections.append((next_flight, wait_time))
+                
+                # Sort connections by arrival time at next destination
+                valid_connections.sort(key=lambda x: x[0]['arrival_datetime'] if 'arrival_datetime' in x[0] else x[0]['arrival'])
+                
+                # Limit connections to explore (top 5 by arrival time)
+                for next_flight, wait_time in valid_connections[:5]:
                     new_total = total_duration + wait_time + next_flight['duration']
                     
                     new_route_info = route_info + [{
@@ -570,9 +603,28 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
                         next_arrival_datetime
                     )
                     
-                    # Prioritize by arrival time at each step - this helps find fastest routes first
                     heapq.heappush(pq, (next_arrival_datetime.timestamp(), counter, new_state))
                     counter += 1
+        
+        # Stop if we have enough routes
+        if len(all_routes) >= 50:
+            break
+    
+    # Remove duplicates
+    unique_routes = []
+    seen_routes = set()
+    
+    for route in all_routes:
+        route_id = tuple([
+            (leg['from'], leg['to'], leg['date'].date(), leg['departure'])
+            for leg in route['route_info']
+        ])
+        
+        if route_id not in seen_routes:
+            seen_routes.add(route_id)
+            unique_routes.append(route)
+    
+    return unique_routes
                     counter += 1
     
     # Remove duplicates
