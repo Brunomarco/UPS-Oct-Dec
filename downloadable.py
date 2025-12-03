@@ -24,7 +24,7 @@ def generate_routes_pdf(routes, origin, destination, selected_date, route_type="
         route_type: "fastest" or "fewest_stops"
     
     Returns:
-        BytesIO buffer containing the PDF
+        bytes containing the PDF
     """
     buffer = BytesIO()
     
@@ -109,7 +109,7 @@ def generate_routes_pdf(routes, origin, destination, selected_date, route_type="
     
     # Header section
     story.append(Paragraph("UPS Healthcare Logistics", title_style))
-    story.append(Paragraph("Flight Routing Report", subtitle_style))
+    story.append(Paragraph(f"Routing {origin} to {destination} on {selected_date}", subtitle_style))
     story.append(Spacer(1, 10))
     
     # Route type header
@@ -319,7 +319,7 @@ def generate_routes_pdf(routes, origin, destination, selected_date, route_type="
     doc.build(story)
     buffer.seek(0)
     
-    return buffer
+    return buffer.getvalue()
 
 # Page configuration with UPS branding
 st.set_page_config(
@@ -331,6 +331,16 @@ st.set_page_config(
 # Initialize session state for tab persistence
 if 'selected_tab' not in st.session_state:
     st.session_state.selected_tab = "📋 Tracked Routes"
+
+# Initialize session state for caching route results (prevents reload on download)
+if 'cached_routes' not in st.session_state:
+    st.session_state.cached_routes = None
+if 'cached_origin' not in st.session_state:
+    st.session_state.cached_origin = None
+if 'cached_destination' not in st.session_state:
+    st.session_state.cached_destination = None
+if 'cached_date' not in st.session_state:
+    st.session_state.cached_date = None
 
 # Custom CSS for UPS branding (brown and gold colors)
 st.markdown("""
@@ -1282,6 +1292,16 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                     # Get the two sorted lists
                     fastest_routes, fewest_stops_routes = get_fastest_and_fewest_stops_routes(all_same_day_routes)
                     
+                    # Cache results in session state to prevent disappearing on download
+                    st.session_state.cached_routes = {
+                        'fastest': fastest_routes,
+                        'fewest': fewest_stops_routes,
+                        'all': all_same_day_routes
+                    }
+                    st.session_state.cached_origin = origin
+                    st.session_state.cached_destination = destination
+                    st.session_state.cached_date = selected_date
+                    
                     st.success(f"✅ Found {len(all_same_day_routes)} connecting route(s) departing on {selected_date}!")
                     
                     # Check for complex routes (5+ stops)
@@ -1528,67 +1548,70 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                     st.markdown("### 📥 Export Routes")
                     st.caption("Download professional PDF reports for sharing with customers and management")
                     
-                    col_dl1, col_dl2 = st.columns(2)
+                    # Generate PDFs and cache in session state to prevent reload
+                    cache_key = f"{origin}_{destination}_{selected_date}"
                     
-                    with col_dl1:
-                        # Generate PDF for Fastest Arriving Routes
-                        fastest_pdf = generate_routes_pdf(
+                    if 'pdf_cache_key' not in st.session_state or st.session_state.pdf_cache_key != cache_key:
+                        # Generate and cache PDFs
+                        st.session_state.pdf_cache_key = cache_key
+                        st.session_state.fastest_pdf = generate_routes_pdf(
                             fastest_routes[:5],
                             origin,
                             destination,
                             selected_date,
                             route_type="fastest"
                         )
-                        
-                        st.download_button(
-                            label="📄 Download Fastest Arriving Routes (PDF)",
-                            data=fastest_pdf,
-                            file_name=f"UPS_Fastest_Routes_{origin}_{destination}_{selected_date}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                    
-                    with col_dl2:
-                        # Generate PDF for Fewest Stops Routes
-                        fewest_pdf = generate_routes_pdf(
+                        st.session_state.fewest_pdf = generate_routes_pdf(
                             fewest_stops_routes[:3],
                             origin,
                             destination,
                             selected_date,
                             route_type="fewest_stops"
                         )
-                        
-                        st.download_button(
-                            label="📄 Download Fewest Stops Routes (PDF)",
-                            data=fewest_pdf,
-                            file_name=f"UPS_Fewest_Stops_{origin}_{destination}_{selected_date}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
+                        # Combined report
+                        fastest_paths = [tuple(r['path']) for r in fastest_routes[:5]]
+                        all_routes_for_pdf = list(fastest_routes[:5])
+                        for r in fewest_stops_routes[:3]:
+                            if tuple(r['path']) not in fastest_paths:
+                                all_routes_for_pdf.append(r)
+                        st.session_state.combined_pdf = generate_routes_pdf(
+                            all_routes_for_pdf,
+                            origin,
+                            destination,
+                            selected_date,
+                            route_type="fastest"
                         )
                     
-                    # Combined report option
+                    col_dl1, col_dl2 = st.columns(2)
+                    
+                    with col_dl1:
+                        st.download_button(
+                            label="📄 Download Fastest Arriving Routes (PDF)",
+                            data=st.session_state.fastest_pdf,
+                            file_name=f"UPS_Fastest_Routes_{origin}_{destination}_{selected_date}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key=f"dl_fastest_{cache_key}"
+                        )
+                    
+                    with col_dl2:
+                        st.download_button(
+                            label="📄 Download Fewest Stops Routes (PDF)",
+                            data=st.session_state.fewest_pdf,
+                            file_name=f"UPS_Fewest_Stops_{origin}_{destination}_{selected_date}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key=f"dl_fewest_{cache_key}"
+                        )
+                    
                     st.markdown("")
-                    # Combine routes, avoiding duplicates based on path
-                    fastest_paths = [tuple(r['path']) for r in fastest_routes[:5]]
-                    all_routes_for_pdf = list(fastest_routes[:5])
-                    for r in fewest_stops_routes[:3]:
-                        if tuple(r['path']) not in fastest_paths:
-                            all_routes_for_pdf.append(r)
-                    
-                    combined_pdf = generate_routes_pdf(
-                        all_routes_for_pdf,
-                        origin,
-                        destination,
-                        selected_date,
-                        route_type="fastest"
-                    )
-                    
                     st.download_button(
                         label="📄 Download Complete Route Report (All Routes - PDF)",
-                        data=combined_pdf,
+                        data=st.session_state.combined_pdf,
                         file_name=f"UPS_Complete_Routes_{origin}_{destination}_{selected_date}.pdf",
                         mime="application/pdf",
-                        use_container_width=True
+                        use_container_width=True,
+                        key=f"dl_combined_{cache_key}"
                     )
                 
                 else:
