@@ -12,6 +12,112 @@ from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
+def generate_routes_excel(routes, origin, destination, selected_date, route_type="fastest"):
+    """
+    Generate an Excel file with route information in a format similar to the flight schedule.
+    
+    Args:
+        routes: List of route dictionaries
+        origin: Origin airport code
+        destination: Destination airport code
+        selected_date: Selected departure date
+        route_type: "fastest" or "fewest_stops"
+    
+    Returns:
+        bytes containing the Excel file
+    """
+    buffer = BytesIO()
+    
+    # Prepare data for Excel - extract all flight segments
+    all_segments = []
+    
+    for route_idx, route in enumerate(routes, 1):
+        route_str = " → ".join(route['path'])
+        
+        for seg_idx, leg in enumerate(route['route_info'], 1):
+            # Calculate arrival date (handle overnight flights)
+            leg_departure_date = leg['date']
+            leg_arrival_date = leg['date']
+            
+            try:
+                dep_str = str(leg['departure'])
+                arr_str = str(leg['arrival'])
+                if ':' in dep_str and ':' in arr_str:
+                    dep_parts = dep_str.split(':')
+                    arr_parts = arr_str.split(':')
+                    dep_minutes = int(dep_parts[0]) * 60 + int(dep_parts[1])
+                    arr_minutes = int(arr_parts[0]) * 60 + int(arr_parts[1])
+                    if arr_minutes < dep_minutes:
+                        leg_arrival_date = leg['date'] + timedelta(days=1)
+            except:
+                pass
+            
+            # Connection time to next segment
+            if seg_idx < len(route['route_info']):
+                next_wait = route['route_info'][seg_idx]['wait_time']
+                conn_hours = next_wait // 60
+                conn_mins = next_wait % 60
+                connection_str = f"{conn_hours}h {conn_mins}m"
+            else:
+                connection_str = "Final Destination"
+            
+            segment_data = {
+                'Route #': route_idx,
+                'Route': route_str,
+                'Route Type': 'Fastest Arriving' if route_type == 'fastest' else 'Fewest Stops',
+                'Segment': seg_idx,
+                'Carrier': leg['carrier'],
+                'Flight #': leg['flight'],
+                'Orig': leg['from'],
+                'Dest': leg['to'],
+                'Departure Date': leg_departure_date.strftime('%Y-%m-%d'),
+                'Departure Day': leg_departure_date.strftime('%A'),
+                'Sched Out(L)': leg['departure'],
+                'Arrival Date': leg_arrival_date.strftime('%Y-%m-%d'),
+                'Arrival Day': leg_arrival_date.strftime('%A'),
+                'Sched In(L)': leg['arrival'],
+                'Blkhr': leg['duration_str'],
+                'Duration (min)': leg['duration'],
+                'Connection Time': connection_str,
+                'Total Stops': route['stops'],
+                'Total Journey (min)': route['total_duration'],
+                'Final Arrival': route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
+            }
+            all_segments.append(segment_data)
+    
+    # Create DataFrame
+    df = pd.DataFrame(all_segments)
+    
+    # Write to Excel with formatting
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        df.to_excel(writer, sheet_name='Route Details', index=False)
+        
+        # Get the workbook and worksheet for formatting
+        workbook = writer.book
+        worksheet = writer.sheets['Route Details']
+        
+        # Auto-adjust column widths using openpyxl utility
+        from openpyxl.utils import get_column_letter
+        for idx, col in enumerate(df.columns, 1):
+            max_length = max(
+                df[col].astype(str).map(len).max() if len(df) > 0 else 0,
+                len(str(col))
+            ) + 2
+            worksheet.column_dimensions[get_column_letter(idx)].width = min(max_length, 30)
+        
+        # Add a summary sheet
+        summary_data = {
+            'Field': ['Origin', 'Destination', 'Departure Date', 'Route Type', 'Total Routes', 'Generated'],
+            'Value': [origin, destination, str(selected_date), 
+                     'Fastest Arriving' if route_type == 'fastest' else 'Fewest Stops',
+                     len(routes), datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
+        }
+        summary_df = pd.DataFrame(summary_data)
+        summary_df.to_excel(writer, sheet_name='Summary', index=False)
+    
+    buffer.seek(0)
+    return buffer.getvalue()
+
 def generate_routes_pdf(routes, origin, destination, selected_date, route_type="fastest"):
     """
     Generate a professional PDF document with route information.
@@ -2058,9 +2164,9 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                     # ============================================================
                     st.markdown("---")
                     st.markdown("### 📥 Export Routes")
-                    st.caption("Download professional PDF reports for sharing with customers and management")
+                    st.caption("Download professional reports for sharing with customers and management")
                     
-                    # Generate PDFs and cache in session state to prevent reload
+                    # Generate files and cache in session state to prevent reload
                     cache_key = f"{origin}_{destination}_{selected_date}"
                     
                     if 'pdf_cache_key' not in st.session_state or st.session_state.pdf_cache_key != cache_key:
@@ -2093,14 +2199,39 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                             selected_date,
                             route_type="fastest"
                         )
+                        
+                        # Generate Excel files
+                        st.session_state.fastest_excel = generate_routes_excel(
+                            fastest_routes[:5],
+                            origin,
+                            destination,
+                            selected_date,
+                            route_type="fastest"
+                        )
+                        st.session_state.fewest_excel = generate_routes_excel(
+                            fewest_stops_routes[:3],
+                            origin,
+                            destination,
+                            selected_date,
+                            route_type="fewest_stops"
+                        )
+                        st.session_state.combined_excel = generate_routes_excel(
+                            all_routes_for_pdf,
+                            origin,
+                            destination,
+                            selected_date,
+                            route_type="combined"
+                        )
                     
+                    # PDF Downloads
+                    st.markdown("#### 📄 PDF Reports")
                     col_dl1, col_dl2 = st.columns(2)
                     
                     with col_dl1:
                         st.download_button(
-                            label="📄 Download Fastest Arriving Routes (PDF)",
+                            label=f"📄 Routing {origin} to {destination} - Fastest (PDF)",
                             data=st.session_state.fastest_pdf,
-                            file_name=f"UPS_Fastest_Routes_{origin}_{destination}_{selected_date}.pdf",
+                            file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.pdf",
                             mime="application/pdf",
                             use_container_width=True,
                             key=f"dl_fastest_{cache_key}"
@@ -2108,22 +2239,54 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                     
                     with col_dl2:
                         st.download_button(
-                            label="📄 Download Fewest Stops Routes (PDF)",
+                            label=f"📄 Routing {origin} to {destination} - Fewest Stops (PDF)",
                             data=st.session_state.fewest_pdf,
-                            file_name=f"UPS_Fewest_Stops_{origin}_{destination}_{selected_date}.pdf",
+                            file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Fewest_Stops.pdf",
                             mime="application/pdf",
                             use_container_width=True,
                             key=f"dl_fewest_{cache_key}"
                         )
                     
-                    st.markdown("")
                     st.download_button(
-                        label="📄 Download Complete Route Report (All Routes - PDF)",
+                        label=f"📄 Routing {origin} to {destination} - Complete Report (PDF)",
                         data=st.session_state.combined_pdf,
-                        file_name=f"UPS_Complete_Routes_{origin}_{destination}_{selected_date}.pdf",
+                        file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Complete.pdf",
                         mime="application/pdf",
                         use_container_width=True,
                         key=f"dl_combined_{cache_key}"
+                    )
+                    
+                    # Excel Downloads
+                    st.markdown("#### 📊 Excel Reports")
+                    col_xl1, col_xl2 = st.columns(2)
+                    
+                    with col_xl1:
+                        st.download_button(
+                            label=f"📊 Routing {origin} to {destination} - Fastest (Excel)",
+                            data=st.session_state.fastest_excel,
+                            file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            key=f"dl_fastest_xl_{cache_key}"
+                        )
+                    
+                    with col_xl2:
+                        st.download_button(
+                            label=f"📊 Routing {origin} to {destination} - Fewest Stops (Excel)",
+                            data=st.session_state.fewest_excel,
+                            file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Fewest_Stops.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            key=f"dl_fewest_xl_{cache_key}"
+                        )
+                    
+                    st.download_button(
+                        label=f"📊 Routing {origin} to {destination} - Complete Report (Excel)",
+                        data=st.session_state.combined_excel,
+                        file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Complete.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True,
+                        key=f"dl_combined_xl_{cache_key}"
                     )
                 
                 else:
@@ -2467,7 +2630,7 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
                     # ============================================================
                     st.markdown("---")
                     st.markdown("### 📥 Export RadioPharma Routes")
-                    st.caption("Download professional PDF reports for sharing with customers and management")
+                    st.caption("Download professional reports for sharing with customers and management")
                     
                     cache_key = f"rp_{origin}_{destination}_{selected_date}"
                     
@@ -2499,14 +2662,39 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
                             selected_date,
                             route_type="fastest"
                         )
+                        
+                        # Generate Excel files
+                        st.session_state.rp_fastest_excel = generate_routes_excel(
+                            fastest_routes[:5],
+                            origin,
+                            destination,
+                            selected_date,
+                            route_type="fastest"
+                        )
+                        st.session_state.rp_fewest_excel = generate_routes_excel(
+                            fewest_stops_routes[:3],
+                            origin,
+                            destination,
+                            selected_date,
+                            route_type="fewest_stops"
+                        )
+                        st.session_state.rp_combined_excel = generate_routes_excel(
+                            all_routes_for_pdf,
+                            origin,
+                            destination,
+                            selected_date,
+                            route_type="combined"
+                        )
                     
+                    # PDF Downloads
+                    st.markdown("#### 📄 PDF Reports")
                     col_dl1, col_dl2 = st.columns(2)
                     
                     with col_dl1:
                         st.download_button(
-                            label="📄 Download Fastest Arriving Routes (PDF)",
+                            label=f"📄 Routing {origin} to {destination} - Fastest (PDF)",
                             data=st.session_state.rp_fastest_pdf,
-                            file_name=f"UPS_RadioPharma_Fastest_{origin}_{destination}_{selected_date}.pdf",
+                            file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.pdf",
                             mime="application/pdf",
                             use_container_width=True,
                             key=f"rp_dl_fastest_{cache_key}"
@@ -2514,22 +2702,54 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
                     
                     with col_dl2:
                         st.download_button(
-                            label="📄 Download Fewest Stops Routes (PDF)",
+                            label=f"📄 Routing {origin} to {destination} - Fewest Stops (PDF)",
                             data=st.session_state.rp_fewest_pdf,
-                            file_name=f"UPS_RadioPharma_Fewest_{origin}_{destination}_{selected_date}.pdf",
+                            file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Fewest_Stops.pdf",
                             mime="application/pdf",
                             use_container_width=True,
                             key=f"rp_dl_fewest_{cache_key}"
                         )
                     
-                    st.markdown("")
                     st.download_button(
-                        label="📄 Download Complete RadioPharma Report (All Routes - PDF)",
+                        label=f"📄 Routing {origin} to {destination} - Complete Report (PDF)",
                         data=st.session_state.rp_combined_pdf,
-                        file_name=f"UPS_RadioPharma_Complete_{origin}_{destination}_{selected_date}.pdf",
+                        file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Complete.pdf",
                         mime="application/pdf",
                         use_container_width=True,
                         key=f"rp_dl_combined_{cache_key}"
+                    )
+                    
+                    # Excel Downloads
+                    st.markdown("#### 📊 Excel Reports")
+                    col_xl1, col_xl2 = st.columns(2)
+                    
+                    with col_xl1:
+                        st.download_button(
+                            label=f"📊 Routing {origin} to {destination} - Fastest (Excel)",
+                            data=st.session_state.rp_fastest_excel,
+                            file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            key=f"rp_dl_fastest_xl_{cache_key}"
+                        )
+                    
+                    with col_xl2:
+                        st.download_button(
+                            label=f"📊 Routing {origin} to {destination} - Fewest Stops (Excel)",
+                            data=st.session_state.rp_fewest_excel,
+                            file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Fewest_Stops.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            key=f"rp_dl_fewest_xl_{cache_key}"
+                        )
+                    
+                    st.download_button(
+                        label=f"📊 Routing {origin} to {destination} - Complete Report (Excel)",
+                        data=st.session_state.rp_combined_excel,
+                        file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Complete.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True,
+                        key=f"rp_dl_combined_xl_{cache_key}"
                     )
                 
                 else:
