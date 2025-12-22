@@ -620,192 +620,236 @@ if 'cached_destination' not in st.session_state:
 if 'cached_date' not in st.session_state:
     st.session_state.cached_date = None
 
-# Professional CSS with UPS branding
+# Premium CSS - Airline-Quality Dashboard Design
 st.markdown("""
     <style>
     /* ============================================
-       GLOBAL STYLES & TYPOGRAPHY
+       GOOGLE FONTS
        ============================================ */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
     
-    .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 1400px;
-    }
-    
-    html, body, [class*="css"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-    
-    h1, h2, h3, h4 {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        font-weight: 600;
-        color: #351C15;
+    /* ============================================
+       CSS VARIABLES
+       ============================================ */
+    :root {
+        --ups-brown: #351C15;
+        --ups-brown-light: #4a2a1f;
+        --ups-brown-dark: #1a0e0a;
+        --ups-gold: #FFB500;
+        --ups-gold-light: #ffc933;
+        --ups-gold-dark: #cc9100;
+        --gray-50: #fafafa;
+        --gray-100: #f5f5f5;
+        --gray-200: #eeeeee;
+        --gray-300: #e0e0e0;
+        --gray-400: #bdbdbd;
+        --gray-500: #9e9e9e;
+        --gray-600: #757575;
+        --gray-700: #616161;
+        --gray-800: #424242;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --error: #ef4444;
+        --info: #3b82f6;
     }
     
     /* ============================================
-       HEADER STYLES
+       GLOBAL STYLES
+       ============================================ */
+    .main .block-container {
+        padding: 1.5rem 2rem 2rem 2rem;
+        max-width: 1600px;
+    }
+    
+    html, body, [class*="css"] {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-weight: 600;
+        color: var(--ups-brown);
+        letter-spacing: -0.02em;
+    }
+    
+    /* ============================================
+       SIDEBAR - PREMIUM DARK THEME
+       ============================================ */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1a0e0a 0%, #0d0705 100%);
+    }
+    
+    section[data-testid="stSidebar"] > div:first-child {
+        padding-top: 0;
+    }
+    
+    /* Sidebar text colors */
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3,
+    section[data-testid="stSidebar"] h4,
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] .stMarkdown,
+    section[data-testid="stSidebar"] p {
+        color: rgba(255, 255, 255, 0.95) !important;
+    }
+    
+    section[data-testid="stSidebar"] span {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    /* File Uploader in Sidebar - FIXED */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+        background: rgba(255, 181, 0, 0.08);
+        border: 2px dashed rgba(255, 181, 0, 0.3);
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"]:hover {
+        background: rgba(255, 181, 0, 0.12);
+        border-color: var(--ups-gold);
+    }
+    
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
+        background: transparent !important;
+        padding: 0 !important;
+    }
+    
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
+        background: var(--ups-gold) !important;
+        color: var(--ups-brown) !important;
+        font-weight: 600 !important;
+        border: none !important;
+        border-radius: 8px !important;
+    }
+    
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] small {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    
+    /* Uploaded file display */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stMarkdownContainer"] {
+        background: rgba(255, 181, 0, 0.15) !important;
+        border: 1px solid rgba(255, 181, 0, 0.3) !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1rem !important;
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Success message in sidebar */
+    section[data-testid="stSidebar"] .stSuccess {
+        background: rgba(16, 185, 129, 0.15) !important;
+        border: 1px solid rgba(16, 185, 129, 0.3) !important;
+        color: #6ee7b7 !important;
+    }
+    
+    /* ============================================
+       HEADER - PREMIUM DESIGN
        ============================================ */
     .main-header {
-        background: linear-gradient(135deg, #351C15 0%, #4a2a1f 100%);
-        color: #FFB500;
-        padding: 1.5rem 2rem;
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 20px rgba(53, 28, 21, 0.15);
+        background: linear-gradient(135deg, var(--ups-brown) 0%, var(--ups-brown-light) 50%, var(--ups-brown) 100%);
+        padding: 0;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(53, 28, 21, 0.2), 0 0 0 1px rgba(255, 181, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .main-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--ups-gold), var(--ups-gold-light), var(--ups-gold));
+    }
+    
+    .header-inner {
+        display: flex;
+        align-items: center;
+        padding: 1.25rem 2rem;
+        gap: 2rem;
+    }
+    
+    .header-logo-container {
+        background: white;
+        padding: 10px 14px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     
     .header-content {
+        flex: 1;
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
     
-    .header-logo {
-        background: white;
-        padding: 12px 16px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .header-title {
-        flex: 1;
-        text-align: center;
-        padding: 0 2rem;
-    }
-    
-    .header-title h1 {
-        color: #FFB500;
-        font-size: 1.8rem;
+    .header-text h1 {
+        color: var(--ups-gold) !important;
+        font-size: 1.6rem;
         font-weight: 700;
         margin: 0;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.03em;
     }
     
-    .header-title p {
-        color: rgba(255, 255, 255, 0.85);
-        font-size: 0.95rem;
-        margin: 0.25rem 0 0 0;
+    .header-text p {
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 0.875rem;
+        margin: 0.2rem 0 0 0;
         font-weight: 400;
     }
     
-    .header-badge {
-        background: rgba(255, 181, 0, 0.15);
-        border: 1px solid rgba(255, 181, 0, 0.3);
-        padding: 8px 16px;
+    .header-status {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .status-badge {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #6ee7b7;
+        padding: 6px 14px;
         border-radius: 20px;
-        color: #FFB500;
-        font-size: 0.8rem;
-        font-weight: 500;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .status-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
     
     /* ============================================
-       SIDEBAR STYLES
-       ============================================ */
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #351C15 0%, #2a1610 100%);
-        border-right: none;
-    }
-    
-    section[data-testid="stSidebar"] .block-container {
-        padding-top: 2rem;
-    }
-    
-    section[data-testid="stSidebar"] h1,
-    section[data-testid="stSidebar"] h2,
-    section[data-testid="stSidebar"] h3,
-    section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] p,
-    section[data-testid="stSidebar"] span {
-        color: white !important;
-    }
-    
-    section[data-testid="stSidebar"] .stMarkdown {
-        color: rgba(255, 255, 255, 0.9);
-    }
-    
-    .sidebar-header {
-        background: rgba(255, 181, 0, 0.1);
-        border: 1px solid rgba(255, 181, 0, 0.2);
-        padding: 1.25rem;
-        border-radius: 10px;
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
-    
-    .sidebar-header h2 {
-        color: #FFB500 !important;
-        font-size: 1.1rem;
-        margin: 0;
-        font-weight: 600;
-    }
-    
-    .sidebar-section {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .sidebar-section-title {
-        color: #FFB500 !important;
-        font-size: 0.85rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 0.75rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid rgba(255, 181, 0, 0.2);
-    }
-    
-    /* ============================================
-       BUTTON STYLES
-       ============================================ */
-    .stButton > button {
-        background: linear-gradient(135deg, #351C15 0%, #4a2a1f 100%);
-        color: #FFB500;
-        font-weight: 600;
-        border: none;
-        padding: 0.6rem 1.5rem;
-        border-radius: 8px;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 8px rgba(53, 28, 21, 0.2);
-    }
-    
-    .stButton > button:hover {
-        background: linear-gradient(135deg, #FFB500 0%, #e6a300 100%);
-        color: #351C15;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(255, 181, 0, 0.3);
-    }
-    
-    .stDownloadButton > button {
-        background: linear-gradient(135deg, #351C15 0%, #4a2a1f 100%);
-        color: #FFB500;
-        font-weight: 600;
-        border: none;
-        border-radius: 8px;
-        transition: all 0.2s ease;
-    }
-    
-    .stDownloadButton > button:hover {
-        background: linear-gradient(135deg, #FFB500 0%, #e6a300 100%);
-        color: #351C15;
-    }
-    
-    /* ============================================
-       METRIC CARDS
+       METRIC CARDS - MODERN GLASSMORPHISM
        ============================================ */
     .metric-card {
         background: white;
-        padding: 1.25rem;
-        border-radius: 12px;
-        border: 1px solid #e8e8e8;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-        transition: all 0.2s ease;
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 1px solid var(--gray-200);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
     }
@@ -817,210 +861,258 @@ st.markdown("""
         top: 0;
         bottom: 0;
         width: 4px;
-        background: linear-gradient(180deg, #FFB500 0%, #e6a300 100%);
+        background: linear-gradient(180deg, var(--ups-gold) 0%, var(--ups-gold-dark) 100%);
+        border-radius: 4px 0 0 4px;
     }
     
     .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(53, 28, 21, 0.1), 0 4px 8px rgba(0, 0, 0, 0.04);
+        border-color: var(--ups-gold);
     }
     
     .metric-card h3 {
-        font-size: 1.75rem;
+        font-size: 2rem;
         font-weight: 700;
-        color: #351C15;
+        color: var(--ups-brown);
         margin: 0 0 0.25rem 0;
+        line-height: 1;
     }
     
     .metric-card p {
-        font-size: 0.85rem;
-        color: #666;
+        font-size: 0.8rem;
+        color: var(--gray-600);
         margin: 0;
         font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
     
     /* ============================================
-       TAB NAVIGATION
+       TAB NAVIGATION - PILL STYLE
        ============================================ */
-    .stRadio > div {
-        display: flex;
-        gap: 0.5rem;
-        background: #f5f5f5;
-        padding: 0.5rem;
-        border-radius: 10px;
+    div[data-testid="stHorizontalBlock"] .stRadio > div {
+        background: var(--gray-100);
+        padding: 6px;
+        border-radius: 12px;
+        gap: 4px;
+        border: 1px solid var(--gray-200);
     }
     
-    .stRadio > div > label {
+    div[data-testid="stHorizontalBlock"] .stRadio > div > label {
         background: transparent;
         padding: 0.75rem 1.5rem;
-        border-radius: 8px;
+        border-radius: 10px;
         font-weight: 500;
+        font-size: 0.9rem;
         transition: all 0.2s ease;
-        cursor: pointer;
+        border: none;
     }
     
-    .stRadio > div > label:hover {
-        background: rgba(53, 28, 21, 0.05);
+    div[data-testid="stHorizontalBlock"] .stRadio > div > label:hover {
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     
-    .stRadio > div > label[data-checked="true"] {
-        background: #351C15;
-        color: #FFB500;
-        box-shadow: 0 2px 8px rgba(53, 28, 21, 0.2);
+    div[data-testid="stHorizontalBlock"] .stRadio > div > label[data-checked="true"] {
+        background: var(--ups-brown) !important;
+        color: var(--ups-gold) !important;
+        box-shadow: 0 4px 12px rgba(53, 28, 21, 0.25);
     }
     
     /* ============================================
-       FORM CONTROLS
+       BUTTONS - PREMIUM STYLE
        ============================================ */
-    .stSelectbox > div > div,
-    .stDateInput > div > div > input {
-        border-radius: 8px;
-        border: 1px solid #ddd;
+    .stButton > button {
+        background: linear-gradient(135deg, var(--ups-brown) 0%, var(--ups-brown-light) 100%);
+        color: var(--ups-gold);
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(53, 28, 21, 0.2);
+        letter-spacing: 0.02em;
+    }
+    
+    .stButton > button:hover {
+        background: linear-gradient(135deg, var(--ups-gold) 0%, var(--ups-gold-light) 100%);
+        color: var(--ups-brown);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 181, 0, 0.35);
+    }
+    
+    .stButton > button:active {
+        transform: translateY(0);
+    }
+    
+    .stDownloadButton > button {
+        background: white;
+        color: var(--ups-brown);
+        font-weight: 600;
+        border: 2px solid var(--ups-brown);
+        border-radius: 10px;
         transition: all 0.2s ease;
     }
     
-    .stSelectbox > div > div:focus-within,
-    .stDateInput > div > div:focus-within {
-        border-color: #FFB500;
-        box-shadow: 0 0 0 3px rgba(255, 181, 0, 0.1);
+    .stDownloadButton > button:hover {
+        background: var(--ups-brown);
+        color: var(--ups-gold);
+        border-color: var(--ups-brown);
     }
     
     /* ============================================
-       CONTENT CARDS
+       FORM CONTROLS - REFINED
+       ============================================ */
+    .stSelectbox > div > div {
+        border-radius: 10px;
+        border: 2px solid var(--gray-200);
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .stSelectbox > div > div:hover {
+        border-color: var(--gray-300);
+    }
+    
+    .stSelectbox > div > div:focus-within {
+        border-color: var(--ups-gold);
+        box-shadow: 0 0 0 4px rgba(255, 181, 0, 0.1);
+    }
+    
+    .stDateInput > div > div > input {
+        border-radius: 10px;
+        border: 2px solid var(--gray-200);
+        padding: 0.6rem 1rem;
+    }
+    
+    .stDateInput > div > div:focus-within {
+        border-color: var(--ups-gold);
+        box-shadow: 0 0 0 4px rgba(255, 181, 0, 0.1);
+    }
+    
+    .stCheckbox > label {
+        font-weight: 500;
+    }
+    
+    /* ============================================
+       SECTION CARDS
+       ============================================ */
+    .section-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.75rem;
+        border: 1px solid var(--gray-200);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    
+    .info-card {
+        background: linear-gradient(135deg, #fffbeb 0%, white 100%);
+        border-left: 4px solid var(--ups-gold);
+        padding: 1rem 1.25rem;
+        border-radius: 0 12px 12px 0;
+        margin: 0.75rem 0;
+    }
+    
+    .info-card strong {
+        color: var(--ups-brown);
+    }
+    
+    /* ============================================
+       ROUTE RESULTS - PREMIUM CARDS
        ============================================ */
     .route-card {
         background: white;
         padding: 1.5rem;
-        border-radius: 12px;
-        border: 1px solid #e8e8e8;
+        border-radius: 14px;
+        border: 1px solid var(--gray-200);
         margin: 1rem 0;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s ease;
     }
     
-    .section-card {
-        background: #fafafa;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        border: 1px solid #eee;
-    }
-    
-    .info-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-        border-left: 4px solid #FFB500;
-        padding: 1rem 1.25rem;
-        border-radius: 0 8px 8px 0;
-        margin: 1rem 0;
-    }
-    
-    .description-box {
-        background: linear-gradient(135deg, #FFF8E8 0%, #fff 100%);
-        padding: 1.25rem;
-        border-radius: 10px;
-        border-left: 4px solid #351C15;
-        margin: 1rem 0;
-    }
-    
-    .contact-warning {
-        background: linear-gradient(135deg, #FFF3CD 0%, #fff8e1 100%);
-        border: 1px solid #ffc107;
-        border-left: 4px solid #FF6B00;
-        padding: 1.25rem;
-        border-radius: 0 10px 10px 0;
-        margin: 1rem 0;
-    }
-    
-    /* ============================================
-       ROUTE RESULT STYLES
-       ============================================ */
-    .route-summary {
-        background: linear-gradient(135deg, #E8F8E8 0%, #f0fff0 100%);
-        padding: 1.25rem;
-        border-radius: 10px;
-        border-left: 4px solid #4CAF50;
-        margin-bottom: 1rem;
-    }
-    
-    .route-summary-fastest {
-        background: linear-gradient(135deg, #E8F4F8 0%, #f0f8ff 100%);
-        padding: 1.25rem;
-        border-radius: 10px;
-        border-left: 4px solid #2196F3;
-        margin-bottom: 1rem;
-    }
-    
-    .flight-segment {
-        background: #fafafa;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 0.75rem 0;
-        border-left: 3px solid #FFB500;
-    }
-    
-    .flight-segment h4 {
-        color: #351C15;
-        font-size: 0.95rem;
-        margin: 0 0 0.5rem 0;
-    }
-    
-    /* ============================================
-       EXPANDER STYLES
-       ============================================ */
-    .streamlit-expanderHeader {
-        background: #f8f9fa;
-        border-radius: 8px;
-        font-weight: 500;
-    }
-    
-    .streamlit-expanderHeader:hover {
-        background: #f0f0f0;
+    .route-card:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     }
     
     /* ============================================
        DOWNLOAD SECTION
        ============================================ */
     .download-section {
-        background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+        background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
         padding: 1.5rem;
-        border-radius: 12px;
-        border: 1px solid #e8e8e8;
+        border-radius: 14px;
+        border: 1px solid var(--gray-200);
         margin-top: 1.5rem;
     }
     
     .download-section h4 {
-        color: #351C15;
+        color: var(--ups-brown);
         font-size: 1rem;
-        margin: 0 0 1rem 0;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
     }
     
     /* ============================================
-       ALERTS & NOTIFICATIONS
+       ALERTS - REFINED
        ============================================ */
-    .stSuccess {
-        background: linear-gradient(135deg, #d4edda 0%, #e8f5e9 100%);
-        border-left: 4px solid #28a745;
-        border-radius: 0 8px 8px 0;
+    .stSuccess > div {
+        background: linear-gradient(135deg, #ecfdf5 0%, white 100%) !important;
+        border: 1px solid #a7f3d0 !important;
+        border-left: 4px solid var(--success) !important;
+        border-radius: 0 12px 12px 0 !important;
     }
     
-    .stWarning {
-        background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%);
-        border-left: 4px solid #ffc107;
-        border-radius: 0 8px 8px 0;
+    .stWarning > div {
+        background: linear-gradient(135deg, #fffbeb 0%, white 100%) !important;
+        border: 1px solid #fde68a !important;
+        border-left: 4px solid var(--warning) !important;
+        border-radius: 0 12px 12px 0 !important;
     }
     
-    .stInfo {
-        background: linear-gradient(135deg, #cce5ff 0%, #e3f2fd 100%);
-        border-left: 4px solid #17a2b8;
-        border-radius: 0 8px 8px 0;
+    .stInfo > div {
+        background: linear-gradient(135deg, #eff6ff 0%, white 100%) !important;
+        border: 1px solid #bfdbfe !important;
+        border-left: 4px solid var(--info) !important;
+        border-radius: 0 12px 12px 0 !important;
     }
     
-    .stError {
-        background: linear-gradient(135deg, #f8d7da 0%, #ffebee 100%);
-        border-left: 4px solid #dc3545;
-        border-radius: 0 8px 8px 0;
+    .stError > div {
+        background: linear-gradient(135deg, #fef2f2 0%, white 100%) !important;
+        border: 1px solid #fecaca !important;
+        border-left: 4px solid var(--error) !important;
+        border-radius: 0 12px 12px 0 !important;
+    }
+    
+    /* ============================================
+       EXPANDERS - MODERN STYLE
+       ============================================ */
+    .streamlit-expanderHeader {
+        background: var(--gray-50) !important;
+        border: 1px solid var(--gray-200) !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        padding: 1rem 1.25rem !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background: var(--gray-100) !important;
+        border-color: var(--gray-300) !important;
+    }
+    
+    details[open] .streamlit-expanderHeader {
+        border-radius: 12px 12px 0 0 !important;
+        border-bottom: none !important;
+    }
+    
+    .streamlit-expanderContent {
+        border: 1px solid var(--gray-200) !important;
+        border-top: none !important;
+        border-radius: 0 0 12px 12px !important;
+        padding: 1.25rem !important;
+        background: white !important;
     }
     
     /* ============================================
@@ -1029,71 +1121,110 @@ st.markdown("""
     hr {
         border: none;
         height: 1px;
-        background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
-        margin: 1.5rem 0;
+        background: linear-gradient(90deg, transparent, var(--gray-300), transparent);
+        margin: 2rem 0;
     }
     
     /* ============================================
-       SPINNER
-       ============================================ */
-    .stSpinner > div {
-        border-color: #FFB500 !important;
-    }
-    
-    /* ============================================
-       SCROLLBAR
+       SCROLLBAR - MINIMAL
        ============================================ */
     ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
     }
     
     ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 4px;
+        background: transparent;
     }
     
     ::-webkit-scrollbar-thumb {
-        background: #c0c0c0;
-        border-radius: 4px;
+        background: var(--gray-300);
+        border-radius: 10px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: #a0a0a0;
+        background: var(--gray-400);
     }
     
     /* ============================================
-       FILE UPLOADER
+       CUSTOM CLASSES FOR COMPONENTS
        ============================================ */
-    .stFileUploader > div {
-        background: rgba(255, 255, 255, 0.1);
-        border: 2px dashed rgba(255, 181, 0, 0.4);
-        border-radius: 10px;
-        transition: all 0.2s ease;
+    .sidebar-brand {
+        background: linear-gradient(135deg, rgba(255, 181, 0, 0.1) 0%, rgba(255, 181, 0, 0.05) 100%);
+        border: 1px solid rgba(255, 181, 0, 0.2);
+        border-radius: 14px;
+        padding: 1.25rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
     }
     
-    .stFileUploader > div:hover {
-        border-color: #FFB500;
-        background: rgba(255, 181, 0, 0.05);
+    .sidebar-brand h2 {
+        color: var(--ups-gold) !important;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .sidebar-section-label {
+        color: rgba(255, 181, 255, 0.6) !important;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.75rem;
+        padding-left: 0.25rem;
+    }
+    
+    .contact-warning {
+        background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+        border: 1px solid #fcd34d;
+        border-left: 4px solid #f59e0b;
+        padding: 1.25rem;
+        border-radius: 0 12px 12px 0;
+        margin: 1rem 0;
+    }
+    
+    .welcome-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.9;
+    }
+    
+    /* ============================================
+       ANIMATIONS
+       ============================================ */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .metric-card, .section-card, .route-card {
+        animation: fadeIn 0.4s ease-out;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding
+# Header with UPS branding - Premium Design
 st.markdown("""
 <div class="main-header">
-    <div class="header-content">
-        <div class="header-logo">
+    <div class="header-inner">
+        <div class="header-logo-container">
             <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/United_Parcel_Service_logo_2014.svg" 
                  alt="UPS Logo" 
-                 style="height: 60px; width: auto;">
+                 style="height: 50px; width: auto;">
         </div>
-        <div class="header-title">
-            <h1>Flight Routing System</h1>
-            <p>Healthcare Logistics • Optimized Shipment Routing</p>
-        </div>
-        <div class="header-badge">
-            v2.0 Professional
+        <div class="header-content">
+            <div class="header-text">
+                <h1>Flight Routing System</h1>
+                <p>Healthcare Logistics • Precision Routing Dashboard</p>
+            </div>
+            <div class="header-status">
+                <div class="status-badge">System Online</div>
+            </div>
         </div>
     </div>
 </div>
@@ -3575,70 +3706,83 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
 
 # Main Application
 def main():
-    # Sidebar with UPS branding
+    # Sidebar with premium UPS branding
     with st.sidebar:
+        # Brand header
         st.markdown("""
-        <div class="sidebar-header">
-            <h2>📦 UPS Flight System</h2>
+        <div class="sidebar-brand">
+            <h2>✈️ UPS Flight System</h2>
         </div>
         """, unsafe_allow_html=True)
         
         # Data Upload Section
         st.markdown("""
-        <div class="sidebar-section-title">📁 Data Upload</div>
+        <p class="sidebar-section-label">📁 DATA SOURCE</p>
         """, unsafe_allow_html=True)
         
         uploaded_file = st.file_uploader(
             "Upload Flight Schedule",
             type=['xlsx', 'xls'],
-            help="Upload your UPS Flight Schedule Excel file"
+            help="Upload your UPS Flight Schedule Excel file",
+            label_visibility="collapsed"
         )
         
         if uploaded_file:
-            st.success("✅ File loaded successfully!")
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # File Requirements Info
             st.markdown("""
-            <div class="sidebar-section-title">📋 File Structure</div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("""
-            <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; font-size: 0.85rem;">
-                <div style="color: #FFB500; margin-bottom: 8px;">Required Sheets:</div>
-                <div style="color: rgba(255,255,255,0.8); margin-left: 8px;">
-                    • <strong>Sheet 1:</strong> Flight schedules<br>
-                    • <strong>Sheet 2:</strong> Route pairs (Data)<br>
-                    • <strong>RP Info:</strong> RadioPharma config <span style="color: #888;">(optional)</span>
-                </div>
+            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); 
+                        color: #6ee7b7; padding: 12px 16px; border-radius: 10px; margin-top: 12px;
+                        display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.2rem;">✓</span>
+                <span style="font-weight: 500;">File loaded successfully</span>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
             
-            # Quick Links
+            # File Info Section
             st.markdown("""
-            <div class="sidebar-section-title">🔗 Quick Actions</div>
+            <p class="sidebar-section-label">📋 FILE STRUCTURE</p>
+            <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 10px; 
+                        border: 1px solid rgba(255,255,255,0.08);">
+                <div style="color: rgba(255,255,255,0.5); font-size: 0.7rem; text-transform: uppercase; 
+                            letter-spacing: 0.05em; margin-bottom: 10px;">Required Sheets</div>
+                <div style="color: rgba(255,255,255,0.85); font-size: 0.85rem; line-height: 1.8;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #FFB500;">•</span> Flight Schedules
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #FFB500;">•</span> Route Pairs (Data)
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: rgba(255,255,255,0.4);">•</span> 
+                        <span style="color: rgba(255,255,255,0.5);">RP Info (optional)</span>
+                    </div>
+                </div>
+            </div>
             """, unsafe_allow_html=True)
         
         else:
             st.markdown("""
-            <div style="background: rgba(255,181,0,0.1); padding: 16px; border-radius: 8px; text-align: center; margin-top: 1rem;">
-                <div style="font-size: 2rem; margin-bottom: 8px;">📤</div>
-                <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">
-                    Upload an Excel file to begin routing analysis
+            <div style="background: linear-gradient(135deg, rgba(255,181,0,0.08) 0%, rgba(255,181,0,0.03) 100%); 
+                        padding: 24px 16px; border-radius: 12px; text-align: center; margin-top: 12px;
+                        border: 1px dashed rgba(255,181,0,0.25);">
+                <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.8;">📤</div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.5;">
+                    Drag & drop your Excel file<br>
+                    <span style="color: rgba(255,255,255,0.4); font-size: 0.75rem;">or click to browse</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
         # Footer
-        st.markdown("<br><br>", unsafe_allow_html=True)
         st.markdown("""
-        <div style="position: absolute; bottom: 20px; left: 20px; right: 20px; text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div style="color: rgba(255,255,255,0.5); font-size: 0.75rem;">
+        <div style="position: fixed; bottom: 0; left: 0; width: inherit; 
+                    padding: 16px 20px; text-align: center;
+                    background: linear-gradient(180deg, transparent 0%, rgba(13,7,5,0.95) 30%);
+                    border-top: 1px solid rgba(255,255,255,0.05);">
+            <div style="color: rgba(255,255,255,0.35); font-size: 0.7rem; letter-spacing: 0.02em;">
                 UPS Healthcare Logistics<br>
-                © 2025 Marken
+                <span style="color: rgba(255,181,0,0.5);">© 2025 Marken</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -3772,28 +3916,35 @@ def main():
                         """, unsafe_allow_html=True)
                 
                 # Time filter option
-                st.markdown("#### ⏰ Departure Time Filter (Optional)")
-                use_time_filter = st.checkbox("Filter by minimum departure time", key="tracked_use_time_filter")
+                st.markdown("---")
+                use_time_filter = st.checkbox(
+                    "⏰ Set earliest departure time",
+                    help="Only show flights departing after a specific time",
+                    key="tracked_use_time_filter"
+                )
                 
                 tracked_min_departure = 0
                 if use_time_filter:
+                    st.caption("Show only flights departing from:")
                     col_t1, col_t2 = st.columns(2)
                     with col_t1:
                         tracked_dep_hour = st.selectbox(
-                            "From hour:",
+                            "Hour",
                             options=list(range(24)),
                             format_func=lambda x: f"{x:02d}:00",
                             key="tracked_dep_hour"
                         )
                     with col_t2:
                         tracked_dep_min = st.selectbox(
-                            "From minute:",
+                            "Minutes",
                             options=[0, 15, 30, 45],
                             format_func=lambda x: f":{x:02d}",
                             key="tracked_dep_min"
                         )
                     tracked_min_departure = tracked_dep_hour * 60 + tracked_dep_min
-                    st.info(f"🕐 Showing flights departing from **{tracked_dep_hour:02d}:{tracked_dep_min:02d}** onwards")
+                    st.info(f"🕐 Showing flights departing **{tracked_dep_hour:02d}:{tracked_dep_min:02d}** or later")
+                
+                st.markdown("<br>", unsafe_allow_html=True)
                 
                 if st.button("🔍 Find Available Routes", type="primary", use_container_width=True, key="tracked_search"):
                     if selected_route:
@@ -3850,28 +4001,35 @@ def main():
                 """, unsafe_allow_html=True)
                 
                 # Time filter option
-                st.markdown("#### ⏰ Departure Time Filter (Optional)")
-                use_custom_time_filter = st.checkbox("Filter by minimum departure time", key="custom_use_time_filter")
+                st.markdown("---")
+                use_custom_time_filter = st.checkbox(
+                    "⏰ Set earliest departure time",
+                    help="Only show flights departing after a specific time",
+                    key="custom_use_time_filter"
+                )
                 
                 custom_min_departure = 0
                 if use_custom_time_filter:
+                    st.caption("Show only flights departing from:")
                     col_t1, col_t2 = st.columns(2)
                     with col_t1:
                         custom_dep_hour = st.selectbox(
-                            "From hour:",
+                            "Hour",
                             options=list(range(24)),
                             format_func=lambda x: f"{x:02d}:00",
                             key="custom_dep_hour"
                         )
                     with col_t2:
                         custom_dep_min = st.selectbox(
-                            "From minute:",
+                            "Minutes",
                             options=[0, 15, 30, 45],
                             format_func=lambda x: f":{x:02d}",
                             key="custom_dep_min"
                         )
                     custom_min_departure = custom_dep_hour * 60 + custom_dep_min
-                    st.info(f"🕐 Showing flights departing from **{custom_dep_hour:02d}:{custom_dep_min:02d}** onwards")
+                    st.info(f"🕐 Showing flights departing **{custom_dep_hour:02d}:{custom_dep_min:02d}** or later")
+                
+                st.markdown("<br>", unsafe_allow_html=True)
                 
                 if st.button("🔍 Find Available Routes", type="primary", use_container_width=True, key="custom_search"):
                     if custom_origin and custom_destination:
@@ -3985,28 +4143,35 @@ def main():
                 """, unsafe_allow_html=True)
                 
                 # Time filter option
-                st.markdown("#### ⏰ Departure Time Filter (Optional)")
-                use_rp_time_filter = st.checkbox("Filter by minimum departure time", key="rp_use_time_filter")
+                st.markdown("---")
+                use_rp_time_filter = st.checkbox(
+                    "⏰ Set earliest departure time",
+                    help="Only show flights departing after a specific time",
+                    key="rp_use_time_filter"
+                )
                 
                 rp_min_departure = 0
                 if use_rp_time_filter:
+                    st.caption("Show only flights departing from:")
                     col_t1, col_t2 = st.columns(2)
                     with col_t1:
                         rp_dep_hour = st.selectbox(
-                            "From hour:",
+                            "Hour",
                             options=list(range(24)),
                             format_func=lambda x: f"{x:02d}:00",
                             key="rp_dep_hour"
                         )
                     with col_t2:
                         rp_dep_min = st.selectbox(
-                            "From minute:",
+                            "Minutes",
                             options=[0, 15, 30, 45],
                             format_func=lambda x: f":{x:02d}",
                             key="rp_dep_min"
                         )
                     rp_min_departure = rp_dep_hour * 60 + rp_dep_min
-                    st.info(f"🕐 Showing flights departing from **{rp_dep_hour:02d}:{rp_dep_min:02d}** onwards")
+                    st.info(f"🕐 Showing flights departing **{rp_dep_hour:02d}:{rp_dep_min:02d}** or later")
+                
+                st.markdown("<br>", unsafe_allow_html=True)
                 
                 if st.button("🔍 Find RadioPharma Routes", type="primary", use_container_width=True, key="rp_search"):
                     if rp_origin and rp_destination:
