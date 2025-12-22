@@ -1783,8 +1783,8 @@ def find_all_routes_for_date(network, origin, destination, target_date, max_stop
 def get_fastest_and_fewest_stops_routes(all_routes_same_day):
     """
     From all routes departing on the same day:
-    1. Fastest Arriving: sorted by arrival_datetime (earliest first)
-    2. Fewest Stops: sorted by number of stops (minimum first)
+    1. Fewest Stops: sorted by number of stops (minimum first), then by journey time
+    2. Fastest Arriving: sorted by arrival_datetime (earliest first)
     
     Returns two separate lists.
     """
@@ -1799,9 +1799,9 @@ def get_fastest_and_fewest_stops_routes(all_routes_same_day):
     
     # ============================================================
     # FEWEST STOPS ROUTES
-    # Sort by number of stops (minimum first), then by arrival time
+    # Sort by number of stops (minimum first), then by total journey time
     # ============================================================
-    by_fewest_stops = sorted(all_routes_same_day, key=lambda x: (x['stops'], x['arrival_datetime']))
+    by_fewest_stops = sorted(all_routes_same_day, key=lambda x: (x['stops'], x['total_duration']))
     
     # Find the minimum number of stops available
     min_stops = by_fewest_stops[0]['stops'] if by_fewest_stops else 0
@@ -1809,8 +1809,8 @@ def get_fastest_and_fewest_stops_routes(all_routes_same_day):
     # Get all routes with minimum stops
     fewest_stops_routes = [r for r in by_fewest_stops if r['stops'] == min_stops]
     
-    # Sort fewest stops routes by arrival time
-    fewest_stops_routes = sorted(fewest_stops_routes, key=lambda x: x['arrival_datetime'])
+    # Sort fewest stops routes by total journey time (shortest first)
+    fewest_stops_routes = sorted(fewest_stops_routes, key=lambda x: x['total_duration'])
     
     return fastest_arriving, fewest_stops_routes
 
@@ -1944,8 +1944,121 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                         """, unsafe_allow_html=True)
                     
                     # ============================================================
-                    # SECTION 1: FASTEST ARRIVING ROUTES
+                    # SECTION 1: ROUTES WITH FEWEST STOPS (PRIMARY)
                     # ============================================================
+                    st.markdown("### 🔗 Routes with Fewest Stops & Shortest Journey")
+                    st.caption(f"Routes departing on {selected_date} with minimum connections ({min_stops_overall} stop(s)), sorted by journey time")
+                    
+                    if min_stops_overall >= 5:
+                        st.warning(f"""
+                        ⚠️ **Minimum stops available: {min_stops_overall}**
+                        
+                        All routes for this origin-destination require {min_stops_overall} or more stops.
+                        Please contact UPS Healthcare Logistics for assistance with complex routing.
+                        """)
+                    
+                    st.info(f"""
+                    💡 **Recommended**: These routes have the fewest stops ({min_stops_overall}) and shortest journey times.
+                    Fewer stops = less cargo handling = reduced risk for sensitive shipments.
+                    """)
+                    
+                    for i, route in enumerate(fewest_stops_routes[:5], 1):
+                        route_str = " → ".join(route['path'])
+                        total_duration = route['total_duration']
+                        total_hours = total_duration // 60
+                        total_mins = total_duration % 60
+                        
+                        total_wait = sum([leg['wait_time'] for leg in route['route_info']])
+                        wait_hours = total_wait // 60
+                        wait_mins = total_wait % 60
+                        
+                        arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
+                        
+                        with st.expander(f"🔗 Option {i}: {route_str} (✅ {route['stops']} stop(s), {total_hours}h {total_mins}m journey) - Arrives: {arrival_time_str}", 
+                                       expanded=(i == 1)):
+                            
+                            if route['stops'] >= 5:
+                                st.error("""
+                                ⚠️ **This route requires 5 or more stops.**
+                                
+                                Please **contact UPS Healthcare Logistics** for personalized assistance with this complex routing.
+                                """)
+                            
+                            # Get first flight departure time
+                            first_leg = route['route_info'][0]
+                            dep_time_str = first_leg['departure']
+                            
+                            st.markdown(f"""
+                            <div style="background-color: #E8F8E8; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #4CAF50;">
+                                <h4 style="color: #2E7D32; margin: 0;">✅ Recommended Route - Fewest Stops & Shortest Journey</h4>
+                                <p><strong>Route:</strong> {route_str}</p>
+                                <p><strong>✅ Number of Stops:</strong> {route['stops']} (minimum available)</p>
+                                <p><strong>🛫 Departure:</strong> {route['start_date'].strftime('%Y-%m-%d')} at {dep_time_str} ({route['start_date'].strftime('%A')})</p>
+                                <p><strong>🛬 Arrival:</strong> {route['arrival_datetime'].strftime('%Y-%m-%d')} at {route['arrival_datetime'].strftime('%H:%M')} ({route['arrival_datetime'].strftime('%A')})</p>
+                                <p><strong>Total Journey Time:</strong> {total_hours}h {total_mins}m</p>
+                                <p><strong>Total Waiting Time:</strong> {wait_hours}h {wait_mins}m</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            st.markdown("### ✈️ Flight Segments:")
+                            
+                            for j, leg in enumerate(route['route_info'], 1):
+                                leg_departure_date = leg['date']
+                                leg_arrival_date = leg['date']
+                                
+                                dep_minutes = parse_time_to_minutes(leg['departure'])
+                                arr_minutes = parse_time_to_minutes(leg['arrival'])
+                                if arr_minutes and dep_minutes and arr_minutes < dep_minutes:
+                                    leg_arrival_date = leg['date'] + timedelta(days=1)
+                                
+                                st.markdown(f"""
+                                <div style="background-color: #FAFAFA; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #4CAF50;">
+                                    <h4 style="color: #351C15;">Segment {j}: {leg['from']} → {leg['to']}</h4>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                col1, col2, col3, col4 = st.columns(4)
+                                
+                                with col1:
+                                    st.markdown("**Date & Carrier**")
+                                    st.write(f"📅 Dep: {leg_departure_date.strftime('%Y-%m-%d')}")
+                                    st.write(f"📅 Arr: {leg_arrival_date.strftime('%Y-%m-%d')}")
+                                    st.write(f"✈️ Carrier: {leg['carrier']}")
+                                
+                                with col2:
+                                    st.markdown("**Flight Details**")
+                                    st.write(f"Flight: {leg['flight']}")
+                                    st.write(f"Dep: {leg['departure']} ({leg_departure_date.strftime('%a')})")
+                                    st.write(f"Arr: {leg['arrival']} ({leg_arrival_date.strftime('%a')})")
+                                
+                                with col3:
+                                    st.markdown("**Duration**")
+                                    st.write(f"Flight Time: {format_duration(leg['duration'])}")
+                                    st.write(f"({leg['duration_str']})")
+                                
+                                with col4:
+                                    st.markdown("**Connection**")
+                                    if j < len(route['route_info']):
+                                        wait_time = route['route_info'][j]['wait_time']
+                                        st.write(f"⏳ Wait: {format_duration(wait_time)}")
+                                    else:
+                                        st.write("Final destination")
+                                
+                                if j < len(route['route_info']):
+                                    st.markdown("⬇️")
+                            
+                            st.success(f"""
+                            **Journey Complete (Fewest Stops):**
+                            - ✅ Only {route['stops']} stop(s) - Minimum handling
+                            - 🎯 Arrival Time: {arrival_time_str}
+                            - Total Travel Time: {total_hours}h {total_mins}m
+                            - Total Segments: {len(route['route_info'])}
+                            """)
+                    
+                    # ============================================================
+                    # SECTION 2: FASTEST ARRIVING ROUTES
+                    # ============================================================
+                    st.markdown("---")
                     st.markdown("### 🚀 Fastest Arriving Routes")
                     st.caption(f"Routes departing on {selected_date}, sorted by earliest arrival at {destination}")
                     
@@ -1966,7 +2079,7 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                             stops_display = f"⚠️ {route['stops']} stops - CONTACT FOR ASSISTANCE"
                         
                         with st.expander(f"🚀 Route {i}: {route_str} ({stops_display}) - Arrives: {arrival_time_str}", 
-                                       expanded=(i == 1)):
+                                       expanded=False):
                             
                             if route['stops'] >= 5:
                                 st.error("""
@@ -2047,119 +2160,6 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                             """)
                     
                     # ============================================================
-                    # SECTION 2: ROUTES WITH FEWEST STOPS
-                    # ============================================================
-                    st.markdown("---")
-                    st.markdown("### 🔗 Routes with Fewest Stops")
-                    st.caption(f"Routes departing on {selected_date} with minimum connections ({min_stops_overall} stop(s))")
-                    
-                    if min_stops_overall >= 5:
-                        st.warning(f"""
-                        ⚠️ **Minimum stops available: {min_stops_overall}**
-                        
-                        All routes for this origin-destination require {min_stops_overall} or more stops.
-                        Please contact UPS Healthcare Logistics for assistance with complex routing.
-                        """)
-                    
-                    st.info(f"""
-                    💡 **Simpler Routing**: These routes have the fewest stops ({min_stops_overall}) available for this route on {selected_date}.
-                    Fewer stops = less cargo handling = reduced risk for sensitive shipments.
-                    """)
-                    
-                    for i, route in enumerate(fewest_stops_routes[:3], 1):
-                        route_str = " → ".join(route['path'])
-                        total_duration = route['total_duration']
-                        total_hours = total_duration // 60
-                        total_mins = total_duration % 60
-                        
-                        total_wait = sum([leg['wait_time'] for leg in route['route_info']])
-                        wait_hours = total_wait // 60
-                        wait_mins = total_wait % 60
-                        
-                        arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
-                        
-                        with st.expander(f"🔗 Fewest Stops Option {i}: {route_str} (✅ {route['stops']} stop(s)) - Arrives: {arrival_time_str}", 
-                                       expanded=(i == 1)):
-                            
-                            if route['stops'] >= 5:
-                                st.error("""
-                                ⚠️ **This route requires 5 or more stops.**
-                                
-                                Please **contact UPS Healthcare Logistics** for personalized assistance with this complex routing.
-                                """)
-                            
-                            # Get first flight departure time
-                            first_leg = route['route_info'][0]
-                            dep_time_str = first_leg['departure']
-                            
-                            st.markdown(f"""
-                            <div style="background-color: #E8F8E8; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #4CAF50;">
-                                <h4 style="color: #2E7D32; margin: 0;">✅ Route with Fewest Stops</h4>
-                                <p><strong>Route:</strong> {route_str}</p>
-                                <p><strong>✅ Number of Stops:</strong> {route['stops']} (minimum available)</p>
-                                <p><strong>🛫 Departure:</strong> {route['start_date'].strftime('%Y-%m-%d')} at {dep_time_str} ({route['start_date'].strftime('%A')})</p>
-                                <p><strong>🛬 Arrival:</strong> {route['arrival_datetime'].strftime('%Y-%m-%d')} at {route['arrival_datetime'].strftime('%H:%M')} ({route['arrival_datetime'].strftime('%A')})</p>
-                                <p><strong>Total Journey Time:</strong> {total_hours}h {total_mins}m</p>
-                                <p><strong>Total Waiting Time:</strong> {wait_hours}h {wait_mins}m</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            st.markdown("### ✈️ Flight Segments:")
-                            
-                            for j, leg in enumerate(route['route_info'], 1):
-                                leg_departure_date = leg['date']
-                                leg_arrival_date = leg['date']
-                                
-                                dep_minutes = parse_time_to_minutes(leg['departure'])
-                                arr_minutes = parse_time_to_minutes(leg['arrival'])
-                                if arr_minutes and dep_minutes and arr_minutes < dep_minutes:
-                                    leg_arrival_date = leg['date'] + timedelta(days=1)
-                                
-                                st.markdown(f"""
-                                <div style="background-color: #FAFAFA; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #4CAF50;">
-                                    <h4 style="color: #351C15;">Segment {j}: {leg['from']} → {leg['to']}</h4>
-                                </div>
-                                """, unsafe_allow_html=True)
-                                
-                                col1, col2, col3, col4 = st.columns(4)
-                                
-                                with col1:
-                                    st.markdown("**Date & Carrier**")
-                                    st.write(f"📅 Dep: {leg_departure_date.strftime('%Y-%m-%d')}")
-                                    st.write(f"📅 Arr: {leg_arrival_date.strftime('%Y-%m-%d')}")
-                                    st.write(f"✈️ Carrier: {leg['carrier']}")
-                                
-                                with col2:
-                                    st.markdown("**Flight Details**")
-                                    st.write(f"Flight: {leg['flight']}")
-                                    st.write(f"Dep: {leg['departure']} ({leg_departure_date.strftime('%a')})")
-                                    st.write(f"Arr: {leg['arrival']} ({leg_arrival_date.strftime('%a')})")
-                                
-                                with col3:
-                                    st.markdown("**Duration**")
-                                    st.write(f"Flight Time: {format_duration(leg['duration'])}")
-                                    st.write(f"({leg['duration_str']})")
-                                
-                                with col4:
-                                    st.markdown("**Connection**")
-                                    if j < len(route['route_info']):
-                                        wait_time = route['route_info'][j]['wait_time']
-                                        st.write(f"⏳ Wait: {format_duration(wait_time)}")
-                                    else:
-                                        st.write("Final destination")
-                                
-                                if j < len(route['route_info']):
-                                    st.markdown("⬇️")
-                            
-                            st.success(f"""
-                            **Journey Complete (Fewest Stops):**
-                            - ✅ Only {route['stops']} stop(s) - Minimum handling
-                            - 🎯 Arrival Time: {arrival_time_str}
-                            - Total Travel Time: {total_hours}h {total_mins}m
-                            - Total Segments: {len(route['route_info'])}
-                            """)
-                    
-                    # ============================================================
                     # DOWNLOAD SECTION
                     # ============================================================
                     st.markdown("---")
@@ -2229,22 +2229,22 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                     
                     with col_dl1:
                         st.download_button(
-                            label=f"📄 Routing {origin} to {destination} - Fastest (PDF)",
-                            data=st.session_state.fastest_pdf,
-                            file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.pdf",
-                            mime="application/pdf",
-                            use_container_width=True,
-                            key=f"dl_fastest_{cache_key}"
-                        )
-                    
-                    with col_dl2:
-                        st.download_button(
                             label=f"📄 Routing {origin} to {destination} - Fewest Stops (PDF)",
                             data=st.session_state.fewest_pdf,
                             file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Fewest_Stops.pdf",
                             mime="application/pdf",
                             use_container_width=True,
                             key=f"dl_fewest_{cache_key}"
+                        )
+                    
+                    with col_dl2:
+                        st.download_button(
+                            label=f"📄 Routing {origin} to {destination} - Fastest (PDF)",
+                            data=st.session_state.fastest_pdf,
+                            file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key=f"dl_fastest_{cache_key}"
                         )
                     
                     st.download_button(
@@ -2262,22 +2262,22 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                     
                     with col_xl1:
                         st.download_button(
-                            label=f"📊 Routing {origin} to {destination} - Fastest (Excel)",
-                            data=st.session_state.fastest_excel,
-                            file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            use_container_width=True,
-                            key=f"dl_fastest_xl_{cache_key}"
-                        )
-                    
-                    with col_xl2:
-                        st.download_button(
                             label=f"📊 Routing {origin} to {destination} - Fewest Stops (Excel)",
                             data=st.session_state.fewest_excel,
                             file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Fewest_Stops.xlsx",
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                             use_container_width=True,
                             key=f"dl_fewest_xl_{cache_key}"
+                        )
+                    
+                    with col_xl2:
+                        st.download_button(
+                            label=f"📊 Routing {origin} to {destination} - Fastest (Excel)",
+                            data=st.session_state.fastest_excel,
+                            file_name=f"Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            key=f"dl_fastest_xl_{cache_key}"
                         )
                     
                     st.download_button(
@@ -2299,37 +2299,47 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                         alt_routes = find_all_routes_for_date(network, origin, destination, alt_date)
                         
                         if alt_routes:
-                            st.info(f"📅 Found routes departing on {alt_date.strftime('%Y-%m-%d')} (+{day_offset} day(s))")
+                            st.success(f"✅ Found {len(alt_routes)} routes departing on {alt_date.strftime('%Y-%m-%d (%A)')} (+{day_offset} day(s))")
                             
                             fastest_routes, fewest_stops_routes = get_fastest_and_fewest_stops_routes(alt_routes)
                             
                             min_stops_overall = min(r['stops'] for r in alt_routes)
                             
-                            # Show first fastest route
-                            if fastest_routes:
-                                route = fastest_routes[0]
-                                route_str = " → ".join(route['path'])
-                                arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
-                                
-                                st.markdown(f"""
-                                **Fastest Route on {alt_date.strftime('%Y-%m-%d')}:**
-                                - Route: {route_str}
-                                - Stops: {route['stops']}
-                                - Arrives: {arrival_time_str}
-                                """)
-                            
-                            # Show first fewest stops route
+                            # Show fewest stops routes FIRST (recommended)
                             if fewest_stops_routes:
-                                route = fewest_stops_routes[0]
-                                route_str = " → ".join(route['path'])
-                                arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
-                                
-                                st.markdown(f"""
-                                **Fewest Stops Route on {alt_date.strftime('%Y-%m-%d')}:**
-                                - Route: {route_str}
-                                - Stops: {route['stops']} (minimum)
-                                - Arrives: {arrival_time_str}
-                                """)
+                                st.markdown("#### 🔗 Recommended - Fewest Stops Routes")
+                                for i, route in enumerate(fewest_stops_routes[:3], 1):
+                                    route_str = " → ".join(route['path'])
+                                    total_hours = route['total_duration'] // 60
+                                    total_mins = route['total_duration'] % 60
+                                    arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
+                                    first_dep = route['route_info'][0]['departure']
+                                    
+                                    st.markdown(f"""
+                                    **Option {i}: {route_str}**
+                                    - ✅ Stops: {route['stops']} (minimum) | Journey: {total_hours}h {total_mins}m
+                                    - 🛫 Departs: {alt_date.strftime('%Y-%m-%d')} at {first_dep}
+                                    - 🛬 Arrives: {arrival_time_str}
+                                    """)
+                            
+                            # Show fastest arriving routes
+                            if fastest_routes:
+                                st.markdown("#### 🚀 Fastest Arriving Routes")
+                                for i, route in enumerate(fastest_routes[:3], 1):
+                                    route_str = " → ".join(route['path'])
+                                    total_hours = route['total_duration'] // 60
+                                    total_mins = route['total_duration'] % 60
+                                    arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
+                                    first_dep = route['route_info'][0]['departure']
+                                    
+                                    st.markdown(f"""
+                                    **Option {i}: {route_str}**
+                                    - Stops: {route['stops']} | Journey: {total_hours}h {total_mins}m
+                                    - 🛫 Departs: {alt_date.strftime('%Y-%m-%d')} at {first_dep}
+                                    - 🛬 Arrives: {arrival_time_str}
+                                    """)
+                            
+                            st.info(f"💡 Select **{alt_date.strftime('%Y-%m-%d')}** as your shipment date to see full route details and download options.")
                             
                             found_alternative = True
                             break
@@ -2412,8 +2422,120 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
                         """, unsafe_allow_html=True)
                     
                     # ============================================================
-                    # SECTION 1: FASTEST ARRIVING ROUTES
+                    # SECTION 1: ROUTES WITH FEWEST STOPS (PRIMARY)
                     # ============================================================
+                    st.markdown("### 🔗 RadioPharma Routes with Fewest Stops & Shortest Journey")
+                    st.caption(f"Routes departing on {selected_date} with minimum connections ({min_stops_overall} stop(s)), sorted by journey time")
+                    
+                    if min_stops_overall >= 5:
+                        st.warning(f"""
+                        ⚠️ **Minimum stops available: {min_stops_overall}**
+                        
+                        All RadioPharma routes require {min_stops_overall} or more stops.
+                        Please contact UPS Healthcare Logistics for assistance.
+                        """)
+                    
+                    st.info(f"""
+                    💡 **Recommended**: These routes have the fewest stops ({min_stops_overall}) and shortest journey times.
+                    Fewer stops = less cargo handling = reduced risk for sensitive radiopharmaceutical shipments.
+                    """)
+                    
+                    for i, route in enumerate(fewest_stops_routes[:5], 1):
+                        route_str = " → ".join(route['path'])
+                        total_duration = route['total_duration']
+                        total_hours = total_duration // 60
+                        total_mins = total_duration % 60
+                        
+                        total_wait = sum([leg['wait_time'] for leg in route['route_info']])
+                        wait_hours = total_wait // 60
+                        wait_mins = total_wait % 60
+                        
+                        arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
+                        
+                        with st.expander(f"🔗 Option {i}: {route_str} (✅ {route['stops']} stop(s), {total_hours}h {total_mins}m journey) - Arrives: {arrival_time_str}", 
+                                       expanded=(i == 1)):
+                            
+                            if route['stops'] >= 5:
+                                st.error("""
+                                ⚠️ **This route requires 5 or more stops.**
+                                
+                                Please **contact UPS Healthcare Logistics** for assistance.
+                                """)
+                            
+                            first_leg = route['route_info'][0]
+                            dep_time_str = first_leg['departure']
+                            
+                            st.markdown(f"""
+                            <div style="background-color: #E8F8E8; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #4CAF50;">
+                                <h4 style="color: #2E7D32; margin: 0;">☢️ Recommended RadioPharma Route - Fewest Stops & Shortest Journey</h4>
+                                <p><strong>Route:</strong> {route_str}</p>
+                                <p><strong>✅ Number of Stops:</strong> {route['stops']} (minimum available)</p>
+                                <p><strong>🛫 Departure:</strong> {route['start_date'].strftime('%Y-%m-%d')} at {dep_time_str} ({route['start_date'].strftime('%A')})</p>
+                                <p><strong>🛬 Arrival:</strong> {route['arrival_datetime'].strftime('%Y-%m-%d')} at {route['arrival_datetime'].strftime('%H:%M')} ({route['arrival_datetime'].strftime('%A')})</p>
+                                <p><strong>Total Journey Time:</strong> {total_hours}h {total_mins}m</p>
+                                <p><strong>Total Waiting Time:</strong> {wait_hours}h {wait_mins}m</p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            st.markdown("### ✈️ Flight Segments:")
+                            
+                            for j, leg in enumerate(route['route_info'], 1):
+                                leg_departure_date = leg['date']
+                                leg_arrival_date = leg['date']
+                                
+                                dep_minutes = parse_time_to_minutes(leg['departure'])
+                                arr_minutes = parse_time_to_minutes(leg['arrival'])
+                                if arr_minutes and dep_minutes and arr_minutes < dep_minutes:
+                                    leg_arrival_date = leg['date'] + timedelta(days=1)
+                                
+                                st.markdown(f"""
+                                <div style="background-color: #FAFAFA; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #4CAF50;">
+                                    <h4 style="color: #351C15;">Segment {j}: {leg['from']} → {leg['to']}</h4>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                col1, col2, col3, col4 = st.columns(4)
+                                
+                                with col1:
+                                    st.markdown("**Date & Carrier**")
+                                    st.write(f"📅 Dep: {leg_departure_date.strftime('%Y-%m-%d')}")
+                                    st.write(f"📅 Arr: {leg_arrival_date.strftime('%Y-%m-%d')}")
+                                    st.write(f"✈️ Carrier: {leg['carrier']}")
+                                
+                                with col2:
+                                    st.markdown("**Flight Details**")
+                                    st.write(f"Flight: {leg['flight']}")
+                                    st.write(f"Dep: {leg['departure']} ({leg_departure_date.strftime('%a')})")
+                                    st.write(f"Arr: {leg['arrival']} ({leg_arrival_date.strftime('%a')})")
+                                
+                                with col3:
+                                    st.markdown("**Duration**")
+                                    st.write(f"Flight Time: {format_duration(leg['duration'])}")
+                                    st.write(f"({leg['duration_str']})")
+                                
+                                with col4:
+                                    st.markdown("**Connection**")
+                                    if j < len(route['route_info']):
+                                        wait_time = route['route_info'][j]['wait_time']
+                                        st.write(f"⏳ Wait: {format_duration(wait_time)}")
+                                    else:
+                                        st.write("Final destination")
+                                
+                                if j < len(route['route_info']):
+                                    st.markdown("⬇️")
+                            
+                            st.success(f"""
+                            **Journey Complete (Fewest Stops):**
+                            - ✅ Only {route['stops']} stop(s) - Minimum handling
+                            - 🎯 Arrival Time: {arrival_time_str}
+                            - Total Travel Time: {total_hours}h {total_mins}m
+                            - Total Segments: {len(route['route_info'])}
+                            """)
+                    
+                    # ============================================================
+                    # SECTION 2: FASTEST ARRIVING ROUTES
+                    # ============================================================
+                    st.markdown("---")
                     st.markdown("### 🚀 Fastest Arriving RadioPharma Routes")
                     st.caption(f"Routes departing on {selected_date}, sorted by earliest arrival at {destination}")
                     
@@ -2434,7 +2556,7 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
                             stops_display = f"⚠️ {route['stops']} stops - CONTACT FOR ASSISTANCE"
                         
                         with st.expander(f"🚀 Route {i}: {route_str} ({stops_display}) - Arrives: {arrival_time_str}", 
-                                       expanded=(i == 1)):
+                                       expanded=False):
                             
                             if route['stops'] >= 5:
                                 st.error("""
@@ -2514,118 +2636,6 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
                             """)
                     
                     # ============================================================
-                    # SECTION 2: ROUTES WITH FEWEST STOPS
-                    # ============================================================
-                    st.markdown("---")
-                    st.markdown("### 🔗 RadioPharma Routes with Fewest Stops")
-                    st.caption(f"Routes departing on {selected_date} with minimum connections ({min_stops_overall} stop(s))")
-                    
-                    if min_stops_overall >= 5:
-                        st.warning(f"""
-                        ⚠️ **Minimum stops available: {min_stops_overall}**
-                        
-                        All RadioPharma routes require {min_stops_overall} or more stops.
-                        Please contact UPS Healthcare Logistics for assistance.
-                        """)
-                    
-                    st.info(f"""
-                    💡 **Simpler Routing**: These routes have the fewest stops ({min_stops_overall}) available for RadioPharma on {selected_date}.
-                    Fewer stops = less cargo handling = reduced risk for sensitive radiopharmaceutical shipments.
-                    """)
-                    
-                    for i, route in enumerate(fewest_stops_routes[:3], 1):
-                        route_str = " → ".join(route['path'])
-                        total_duration = route['total_duration']
-                        total_hours = total_duration // 60
-                        total_mins = total_duration % 60
-                        
-                        total_wait = sum([leg['wait_time'] for leg in route['route_info']])
-                        wait_hours = total_wait // 60
-                        wait_mins = total_wait % 60
-                        
-                        arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
-                        
-                        with st.expander(f"🔗 Fewest Stops Option {i}: {route_str} (✅ {route['stops']} stop(s)) - Arrives: {arrival_time_str}", 
-                                       expanded=(i == 1)):
-                            
-                            if route['stops'] >= 5:
-                                st.error("""
-                                ⚠️ **This route requires 5 or more stops.**
-                                
-                                Please **contact UPS Healthcare Logistics** for assistance.
-                                """)
-                            
-                            first_leg = route['route_info'][0]
-                            dep_time_str = first_leg['departure']
-                            
-                            st.markdown(f"""
-                            <div style="background-color: #E8F8E8; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #4CAF50;">
-                                <h4 style="color: #2E7D32; margin: 0;">☢️ RadioPharma Route with Fewest Stops</h4>
-                                <p><strong>Route:</strong> {route_str}</p>
-                                <p><strong>✅ Number of Stops:</strong> {route['stops']} (minimum available)</p>
-                                <p><strong>🛫 Departure:</strong> {route['start_date'].strftime('%Y-%m-%d')} at {dep_time_str} ({route['start_date'].strftime('%A')})</p>
-                                <p><strong>🛬 Arrival:</strong> {route['arrival_datetime'].strftime('%Y-%m-%d')} at {route['arrival_datetime'].strftime('%H:%M')} ({route['arrival_datetime'].strftime('%A')})</p>
-                                <p><strong>Total Journey Time:</strong> {total_hours}h {total_mins}m</p>
-                                <p><strong>Total Waiting Time:</strong> {wait_hours}h {wait_mins}m</p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            st.markdown("### ✈️ Flight Segments:")
-                            
-                            for j, leg in enumerate(route['route_info'], 1):
-                                leg_departure_date = leg['date']
-                                leg_arrival_date = leg['date']
-                                
-                                dep_minutes = parse_time_to_minutes(leg['departure'])
-                                arr_minutes = parse_time_to_minutes(leg['arrival'])
-                                if arr_minutes and dep_minutes and arr_minutes < dep_minutes:
-                                    leg_arrival_date = leg['date'] + timedelta(days=1)
-                                
-                                st.markdown(f"""
-                                <div style="background-color: #FAFAFA; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #4CAF50;">
-                                    <h4 style="color: #351C15;">Segment {j}: {leg['from']} → {leg['to']}</h4>
-                                </div>
-                                """, unsafe_allow_html=True)
-                                
-                                col1, col2, col3, col4 = st.columns(4)
-                                
-                                with col1:
-                                    st.markdown("**Date & Carrier**")
-                                    st.write(f"📅 Dep: {leg_departure_date.strftime('%Y-%m-%d')}")
-                                    st.write(f"📅 Arr: {leg_arrival_date.strftime('%Y-%m-%d')}")
-                                    st.write(f"✈️ Carrier: {leg['carrier']}")
-                                
-                                with col2:
-                                    st.markdown("**Flight Details**")
-                                    st.write(f"Flight: {leg['flight']}")
-                                    st.write(f"Dep: {leg['departure']} ({leg_departure_date.strftime('%a')})")
-                                    st.write(f"Arr: {leg['arrival']} ({leg_arrival_date.strftime('%a')})")
-                                
-                                with col3:
-                                    st.markdown("**Duration**")
-                                    st.write(f"Flight Time: {format_duration(leg['duration'])}")
-                                    st.write(f"({leg['duration_str']})")
-                                
-                                with col4:
-                                    st.markdown("**Connection**")
-                                    if j < len(route['route_info']):
-                                        wait_time = route['route_info'][j]['wait_time']
-                                        st.write(f"⏳ Wait: {format_duration(wait_time)}")
-                                    else:
-                                        st.write("Final destination")
-                                
-                                if j < len(route['route_info']):
-                                    st.markdown("⬇️")
-                            
-                            st.success(f"""
-                            **Journey Complete (Fewest Stops):**
-                            - ✅ Only {route['stops']} stop(s) - Minimum handling
-                            - 🎯 Arrival Time: {arrival_time_str}
-                            - Total Travel Time: {total_hours}h {total_mins}m
-                            - Total Segments: {len(route['route_info'])}
-                            """)
-                    
-                    # ============================================================
                     # DOWNLOAD SECTION
                     # ============================================================
                     st.markdown("---")
@@ -2692,22 +2702,22 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
                     
                     with col_dl1:
                         st.download_button(
-                            label=f"📄 Routing {origin} to {destination} - Fastest (PDF)",
-                            data=st.session_state.rp_fastest_pdf,
-                            file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.pdf",
-                            mime="application/pdf",
-                            use_container_width=True,
-                            key=f"rp_dl_fastest_{cache_key}"
-                        )
-                    
-                    with col_dl2:
-                        st.download_button(
                             label=f"📄 Routing {origin} to {destination} - Fewest Stops (PDF)",
                             data=st.session_state.rp_fewest_pdf,
                             file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Fewest_Stops.pdf",
                             mime="application/pdf",
                             use_container_width=True,
                             key=f"rp_dl_fewest_{cache_key}"
+                        )
+                    
+                    with col_dl2:
+                        st.download_button(
+                            label=f"📄 Routing {origin} to {destination} - Fastest (PDF)",
+                            data=st.session_state.rp_fastest_pdf,
+                            file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key=f"rp_dl_fastest_{cache_key}"
                         )
                     
                     st.download_button(
@@ -2725,22 +2735,22 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
                     
                     with col_xl1:
                         st.download_button(
-                            label=f"📊 Routing {origin} to {destination} - Fastest (Excel)",
-                            data=st.session_state.rp_fastest_excel,
-                            file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            use_container_width=True,
-                            key=f"rp_dl_fastest_xl_{cache_key}"
-                        )
-                    
-                    with col_xl2:
-                        st.download_button(
                             label=f"📊 Routing {origin} to {destination} - Fewest Stops (Excel)",
                             data=st.session_state.rp_fewest_excel,
                             file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Fewest_Stops.xlsx",
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                             use_container_width=True,
                             key=f"rp_dl_fewest_xl_{cache_key}"
+                        )
+                    
+                    with col_xl2:
+                        st.download_button(
+                            label=f"📊 Routing {origin} to {destination} - Fastest (Excel)",
+                            data=st.session_state.rp_fastest_excel,
+                            file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{selected_date}_Fastest.xlsx",
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            use_container_width=True,
+                            key=f"rp_dl_fastest_xl_{cache_key}"
                         )
                     
                     st.download_button(
