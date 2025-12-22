@@ -14,7 +14,7 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
 def generate_routes_excel(routes, origin, destination, selected_date, route_type="fastest"):
     """
-    Generate an Excel file with route information in a format similar to the flight schedule.
+    Generate a professionally formatted Excel file with route information.
     
     Args:
         routes: List of route dictionaries
@@ -26,13 +26,45 @@ def generate_routes_excel(routes, origin, destination, selected_date, route_type
     Returns:
         bytes containing the Excel file
     """
+    from openpyxl.styles import Font, Fill, PatternFill, Border, Side, Alignment
+    from openpyxl.utils import get_column_letter
+    from openpyxl.formatting.rule import FormulaRule
+    
     buffer = BytesIO()
+    
+    # Define UPS brand colors
+    ups_brown = "351C15"
+    ups_gold = "FFB500"
+    light_brown = "F5E6D3"
+    light_gray = "F2F2F2"
+    white = "FFFFFF"
+    
+    # Define styles
+    header_font = Font(bold=True, color=white, size=11)
+    header_fill = PatternFill(start_color=ups_brown, end_color=ups_brown, fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    
+    data_font = Font(size=10)
+    data_alignment = Alignment(horizontal="left", vertical="center")
+    center_alignment = Alignment(horizontal="center", vertical="center")
+    
+    alt_row_fill = PatternFill(start_color=light_gray, end_color=light_gray, fill_type="solid")
+    route_separator_fill = PatternFill(start_color=light_brown, end_color=light_brown, fill_type="solid")
+    
+    thin_border = Border(
+        left=Side(style='thin', color='CCCCCC'),
+        right=Side(style='thin', color='CCCCCC'),
+        top=Side(style='thin', color='CCCCCC'),
+        bottom=Side(style='thin', color='CCCCCC')
+    )
     
     # Prepare data for Excel - extract all flight segments
     all_segments = []
     
     for route_idx, route in enumerate(routes, 1):
         route_str = " → ".join(route['path'])
+        total_hours = route['total_duration'] // 60
+        total_mins = route['total_duration'] % 60
         
         for seg_idx, leg in enumerate(route['route_info'], 1):
             # Calculate arrival date (handle overnight flights)
@@ -59,28 +91,26 @@ def generate_routes_excel(routes, origin, destination, selected_date, route_type
                 conn_mins = next_wait % 60
                 connection_str = f"{conn_hours}h {conn_mins}m"
             else:
-                connection_str = "Final Destination"
+                connection_str = "—"
             
             segment_data = {
                 'Route #': route_idx,
                 'Route': route_str,
-                'Route Type': 'Fastest Arriving' if route_type == 'fastest' else 'Fewest Stops',
-                'Segment': seg_idx,
+                'Stops': route['stops'],
+                'Segment': f"{seg_idx} of {len(route['route_info'])}",
                 'Carrier': leg['carrier'],
-                'Flight #': leg['flight'],
-                'Orig': leg['from'],
-                'Dest': leg['to'],
-                'Departure Date': leg_departure_date.strftime('%Y-%m-%d'),
-                'Departure Day': leg_departure_date.strftime('%A'),
-                'Sched Out(L)': leg['departure'],
-                'Arrival Date': leg_arrival_date.strftime('%Y-%m-%d'),
-                'Arrival Day': leg_arrival_date.strftime('%A'),
-                'Sched In(L)': leg['arrival'],
-                'Blkhr': leg['duration_str'],
-                'Duration (min)': leg['duration'],
-                'Connection Time': connection_str,
-                'Total Stops': route['stops'],
-                'Total Journey (min)': route['total_duration'],
+                'Flight': leg['flight'],
+                'Origin': leg['from'],
+                'Destination': leg['to'],
+                'Dep. Date': leg_departure_date.strftime('%Y-%m-%d'),
+                'Dep. Day': leg_departure_date.strftime('%a'),
+                'Dep. Time': leg['departure'],
+                'Arr. Date': leg_arrival_date.strftime('%Y-%m-%d'),
+                'Arr. Day': leg_arrival_date.strftime('%a'),
+                'Arr. Time': leg['arrival'],
+                'Flight Duration': leg['duration_str'],
+                'Connection': connection_str,
+                'Total Journey': f"{total_hours}h {total_mins}m",
                 'Final Arrival': route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
             }
             all_segments.append(segment_data)
@@ -90,30 +120,171 @@ def generate_routes_excel(routes, origin, destination, selected_date, route_type
     
     # Write to Excel with formatting
     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        df.to_excel(writer, sheet_name='Route Details', index=False)
+        # Write Route Details sheet
+        df.to_excel(writer, sheet_name='Route Details', index=False, startrow=2)
         
-        # Get the workbook and worksheet for formatting
         workbook = writer.book
         worksheet = writer.sheets['Route Details']
         
-        # Auto-adjust column widths using openpyxl utility
-        from openpyxl.utils import get_column_letter
-        for idx, col in enumerate(df.columns, 1):
-            max_length = max(
-                df[col].astype(str).map(len).max() if len(df) > 0 else 0,
-                len(str(col))
-            ) + 2
-            worksheet.column_dimensions[get_column_letter(idx)].width = min(max_length, 30)
+        # Add title row
+        route_type_display = 'Fewest Stops & Shortest Journey' if route_type == 'fewest_stops' else 'Fastest Arriving'
+        title = f"UPS Healthcare Logistics - Flight Routing: {origin} → {destination}"
+        subtitle = f"Departure Date: {selected_date} | Route Type: {route_type_display} | Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
         
-        # Add a summary sheet
-        summary_data = {
-            'Field': ['Origin', 'Destination', 'Departure Date', 'Route Type', 'Total Routes', 'Generated'],
-            'Value': [origin, destination, str(selected_date), 
-                     'Fastest Arriving' if route_type == 'fastest' else 'Fewest Stops',
-                     len(routes), datetime.now().strftime('%Y-%m-%d %H:%M:%S')]
+        worksheet.merge_cells('A1:R1')
+        worksheet.merge_cells('A2:R2')
+        
+        title_cell = worksheet['A1']
+        title_cell.value = title
+        title_cell.font = Font(bold=True, size=14, color=ups_brown)
+        title_cell.alignment = Alignment(horizontal="left", vertical="center")
+        
+        subtitle_cell = worksheet['A2']
+        subtitle_cell.value = subtitle
+        subtitle_cell.font = Font(size=10, color="666666")
+        subtitle_cell.alignment = Alignment(horizontal="left", vertical="center")
+        
+        # Style header row (row 3)
+        for col_idx, col in enumerate(df.columns, 1):
+            cell = worksheet.cell(row=3, column=col_idx)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+        
+        # Style data rows
+        prev_route = None
+        for row_idx in range(4, len(df) + 4):
+            current_route = worksheet.cell(row=row_idx, column=1).value
+            
+            for col_idx in range(1, len(df.columns) + 1):
+                cell = worksheet.cell(row=row_idx, column=col_idx)
+                cell.font = data_font
+                cell.border = thin_border
+                
+                # Center alignment for specific columns
+                if col_idx in [1, 3, 4, 5, 6, 10, 13]:  # Route #, Stops, Segment, Carrier, Flight, Days
+                    cell.alignment = center_alignment
+                else:
+                    cell.alignment = data_alignment
+                
+                # Alternating row colors within each route group
+                if current_route != prev_route and prev_route is not None:
+                    # First row of new route - light brown
+                    cell.fill = route_separator_fill
+                elif (row_idx - 4) % 2 == 1:
+                    cell.fill = alt_row_fill
+            
+            prev_route = current_route
+        
+        # Set column widths
+        column_widths = {
+            'A': 8,   # Route #
+            'B': 25,  # Route
+            'C': 7,   # Stops
+            'D': 10,  # Segment
+            'E': 8,   # Carrier
+            'F': 10,  # Flight
+            'G': 8,   # Origin
+            'H': 10,  # Destination
+            'I': 12,  # Dep. Date
+            'J': 6,   # Dep. Day
+            'K': 10,  # Dep. Time
+            'L': 12,  # Arr. Date
+            'M': 6,   # Arr. Day
+            'N': 10,  # Arr. Time
+            'O': 14,  # Flight Duration
+            'P': 12,  # Connection
+            'Q': 14,  # Total Journey
+            'R': 18,  # Final Arrival
         }
-        summary_df = pd.DataFrame(summary_data)
-        summary_df.to_excel(writer, sheet_name='Summary', index=False)
+        
+        for col_letter, width in column_widths.items():
+            worksheet.column_dimensions[col_letter].width = width
+        
+        # Freeze panes (freeze header row)
+        worksheet.freeze_panes = 'A4'
+        
+        # Add auto-filter
+        worksheet.auto_filter.ref = f"A3:R{len(df) + 3}"
+        
+        # Set row height for header
+        worksheet.row_dimensions[1].height = 25
+        worksheet.row_dimensions[2].height = 18
+        worksheet.row_dimensions[3].height = 35
+        
+        # ============================================================
+        # Create Summary sheet
+        # ============================================================
+        summary_ws = workbook.create_sheet('Summary')
+        
+        # Title
+        summary_ws.merge_cells('A1:C1')
+        summary_ws['A1'] = "Route Summary"
+        summary_ws['A1'].font = Font(bold=True, size=14, color=ups_brown)
+        summary_ws['A1'].alignment = Alignment(horizontal="left")
+        
+        # Summary data
+        summary_info = [
+            ('Origin Airport:', origin),
+            ('Destination Airport:', destination),
+            ('Departure Date:', str(selected_date)),
+            ('Route Type:', route_type_display),
+            ('Total Routes Found:', len(routes)),
+            ('Report Generated:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+            ('', ''),
+            ('Route Overview:', ''),
+        ]
+        
+        for row_idx, (label, value) in enumerate(summary_info, 3):
+            summary_ws.cell(row=row_idx, column=1, value=label).font = Font(bold=True, size=10)
+            summary_ws.cell(row=row_idx, column=2, value=value).font = Font(size=10)
+        
+        # Add route summary table
+        route_summary_start = len(summary_info) + 4
+        
+        # Headers for route summary
+        route_headers = ['Route #', 'Route', 'Stops', 'Total Journey', 'Final Arrival']
+        for col_idx, header in enumerate(route_headers, 1):
+            cell = summary_ws.cell(row=route_summary_start, column=col_idx, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+        
+        # Route data
+        for route_idx, route in enumerate(routes, 1):
+            row = route_summary_start + route_idx
+            route_str = " → ".join(route['path'])
+            total_hours = route['total_duration'] // 60
+            total_mins = route['total_duration'] % 60
+            
+            data = [
+                route_idx,
+                route_str,
+                route['stops'],
+                f"{total_hours}h {total_mins}m",
+                route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
+            ]
+            
+            for col_idx, value in enumerate(data, 1):
+                cell = summary_ws.cell(row=row, column=col_idx, value=value)
+                cell.font = data_font
+                cell.border = thin_border
+                if col_idx in [1, 3]:
+                    cell.alignment = center_alignment
+                else:
+                    cell.alignment = data_alignment
+                
+                if route_idx % 2 == 0:
+                    cell.fill = alt_row_fill
+        
+        # Set column widths for summary
+        summary_ws.column_dimensions['A'].width = 10
+        summary_ws.column_dimensions['B'].width = 30
+        summary_ws.column_dimensions['C'].width = 8
+        summary_ws.column_dimensions['D'].width = 15
+        summary_ws.column_dimensions['E'].width = 20
     
     buffer.seek(0)
     return buffer.getvalue()
@@ -2299,47 +2470,174 @@ def display_route_results(origin, destination, selected_date, schedule_df, min_d
                         alt_routes = find_all_routes_for_date(network, origin, destination, alt_date)
                         
                         if alt_routes:
-                            st.success(f"✅ Found {len(alt_routes)} routes departing on {alt_date.strftime('%Y-%m-%d (%A)')} (+{day_offset} day(s))")
+                            st.success(f"✅ Found {len(alt_routes)} routes departing on **{alt_date.strftime('%Y-%m-%d (%A)')}** (+{day_offset} day(s))")
                             
                             fastest_routes, fewest_stops_routes = get_fastest_and_fewest_stops_routes(alt_routes)
-                            
                             min_stops_overall = min(r['stops'] for r in alt_routes)
                             
-                            # Show fewest stops routes FIRST (recommended)
-                            if fewest_stops_routes:
-                                st.markdown("#### 🔗 Recommended - Fewest Stops Routes")
-                                for i, route in enumerate(fewest_stops_routes[:3], 1):
-                                    route_str = " → ".join(route['path'])
-                                    total_hours = route['total_duration'] // 60
-                                    total_mins = route['total_duration'] % 60
-                                    arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
-                                    first_dep = route['route_info'][0]['departure']
+                            # Cache the alternative date results
+                            st.session_state.cached_routes = {
+                                'fastest': fastest_routes,
+                                'fewest': fewest_stops_routes,
+                                'all': alt_routes
+                            }
+                            st.session_state.cached_origin = origin
+                            st.session_state.cached_destination = destination
+                            st.session_state.cached_date = alt_date.strftime('%Y-%m-%d')
+                            
+                            # ============================================================
+                            # SECTION 1: ROUTES WITH FEWEST STOPS (PRIMARY)
+                            # ============================================================
+                            st.markdown("### 🔗 Recommended - Fewest Stops Routes")
+                            st.caption(f"Routes departing on {alt_date.strftime('%Y-%m-%d')} with minimum connections ({min_stops_overall} stop(s))")
+                            
+                            st.info(f"""
+                            💡 **Recommended**: These routes have the fewest stops ({min_stops_overall}) and shortest journey times.
+                            Fewer stops = less cargo handling = reduced risk for sensitive shipments.
+                            """)
+                            
+                            for i, route in enumerate(fewest_stops_routes[:5], 1):
+                                route_str = " → ".join(route['path'])
+                                total_hours = route['total_duration'] // 60
+                                total_mins = route['total_duration'] % 60
+                                total_wait = sum([leg['wait_time'] for leg in route['route_info']])
+                                wait_hours = total_wait // 60
+                                wait_mins = total_wait % 60
+                                arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
+                                first_dep = route['route_info'][0]['departure']
+                                
+                                with st.expander(f"🔗 Option {i}: {route_str} (✅ {route['stops']} stop(s), {total_hours}h {total_mins}m journey) - Arrives: {arrival_time_str}", 
+                                               expanded=(i == 1)):
                                     
                                     st.markdown(f"""
-                                    **Option {i}: {route_str}**
-                                    - ✅ Stops: {route['stops']} (minimum) | Journey: {total_hours}h {total_mins}m
-                                    - 🛫 Departs: {alt_date.strftime('%Y-%m-%d')} at {first_dep}
-                                    - 🛬 Arrives: {arrival_time_str}
-                                    """)
-                            
-                            # Show fastest arriving routes
-                            if fastest_routes:
-                                st.markdown("#### 🚀 Fastest Arriving Routes")
-                                for i, route in enumerate(fastest_routes[:3], 1):
-                                    route_str = " → ".join(route['path'])
-                                    total_hours = route['total_duration'] // 60
-                                    total_mins = route['total_duration'] % 60
-                                    arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
-                                    first_dep = route['route_info'][0]['departure']
+                                    <div style="background-color: #E8F8E8; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #4CAF50;">
+                                        <h4 style="color: #2E7D32; margin: 0;">✅ Recommended Route - Fewest Stops & Shortest Journey</h4>
+                                        <p><strong>Route:</strong> {route_str}</p>
+                                        <p><strong>✅ Number of Stops:</strong> {route['stops']} (minimum available)</p>
+                                        <p><strong>🛫 Departure:</strong> {alt_date.strftime('%Y-%m-%d')} at {first_dep} ({alt_date.strftime('%A')})</p>
+                                        <p><strong>🛬 Arrival:</strong> {route['arrival_datetime'].strftime('%Y-%m-%d')} at {route['arrival_datetime'].strftime('%H:%M')} ({route['arrival_datetime'].strftime('%A')})</p>
+                                        <p><strong>Total Journey Time:</strong> {total_hours}h {total_mins}m</p>
+                                        <p><strong>Total Waiting Time:</strong> {wait_hours}h {wait_mins}m</p>
+                                    </div>
+                                    """, unsafe_allow_html=True)
                                     
-                                    st.markdown(f"""
-                                    **Option {i}: {route_str}**
-                                    - Stops: {route['stops']} | Journey: {total_hours}h {total_mins}m
-                                    - 🛫 Departs: {alt_date.strftime('%Y-%m-%d')} at {first_dep}
-                                    - 🛬 Arrives: {arrival_time_str}
-                                    """)
+                                    st.markdown("### ✈️ Flight Segments:")
+                                    for j, leg in enumerate(route['route_info'], 1):
+                                        leg_departure_date = leg['date']
+                                        leg_arrival_date = leg['date']
+                                        dep_minutes = parse_time_to_minutes(leg['departure'])
+                                        arr_minutes = parse_time_to_minutes(leg['arrival'])
+                                        if arr_minutes and dep_minutes and arr_minutes < dep_minutes:
+                                            leg_arrival_date = leg['date'] + timedelta(days=1)
+                                        
+                                        col1, col2, col3 = st.columns(3)
+                                        with col1:
+                                            st.write(f"**Segment {j}:** {leg['from']} → {leg['to']}")
+                                            st.write(f"Flight: {leg['carrier']} {leg['flight']}")
+                                        with col2:
+                                            st.write(f"Dep: {leg['departure']} ({leg_departure_date.strftime('%a')})")
+                                            st.write(f"Arr: {leg['arrival']} ({leg_arrival_date.strftime('%a')})")
+                                        with col3:
+                                            st.write(f"Duration: {leg['duration_str']}")
+                                            if j < len(route['route_info']):
+                                                wait_time = route['route_info'][j]['wait_time']
+                                                st.write(f"Connection: {format_duration(wait_time)}")
                             
-                            st.info(f"💡 Select **{alt_date.strftime('%Y-%m-%d')}** as your shipment date to see full route details and download options.")
+                            # ============================================================
+                            # SECTION 2: FASTEST ARRIVING ROUTES
+                            # ============================================================
+                            st.markdown("---")
+                            st.markdown("### 🚀 Fastest Arriving Routes")
+                            st.caption(f"Routes departing on {alt_date.strftime('%Y-%m-%d')}, sorted by earliest arrival")
+                            
+                            for i, route in enumerate(fastest_routes[:5], 1):
+                                route_str = " → ".join(route['path'])
+                                total_hours = route['total_duration'] // 60
+                                total_mins = route['total_duration'] % 60
+                                arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
+                                first_dep = route['route_info'][0]['departure']
+                                
+                                with st.expander(f"🚀 Route {i}: {route_str} ({route['stops']} stop(s)) - Arrives: {arrival_time_str}", 
+                                               expanded=False):
+                                    st.markdown(f"""
+                                    - **Route:** {route_str}
+                                    - **Stops:** {route['stops']}
+                                    - **Departure:** {alt_date.strftime('%Y-%m-%d')} at {first_dep}
+                                    - **Arrival:** {arrival_time_str}
+                                    - **Journey Time:** {total_hours}h {total_mins}m
+                                    """)
+                                    
+                                    for j, leg in enumerate(route['route_info'], 1):
+                                        st.write(f"Segment {j}: {leg['from']} → {leg['to']} | {leg['carrier']} {leg['flight']} | Dep: {leg['departure']} Arr: {leg['arrival']}")
+                            
+                            # ============================================================
+                            # DOWNLOAD SECTION FOR ALTERNATIVE DATE
+                            # ============================================================
+                            st.markdown("---")
+                            st.markdown("### 📥 Export Routes")
+                            st.caption(f"Download routes for {alt_date.strftime('%Y-%m-%d')}")
+                            
+                            alt_date_str = alt_date.strftime('%Y-%m-%d')
+                            cache_key = f"alt_{origin}_{destination}_{alt_date_str}"
+                            
+                            # Generate files for alternative date
+                            if 'alt_pdf_cache_key' not in st.session_state or st.session_state.get('alt_pdf_cache_key') != cache_key:
+                                st.session_state.alt_pdf_cache_key = cache_key
+                                st.session_state.alt_fewest_pdf = generate_routes_pdf(
+                                    fewest_stops_routes[:5], origin, destination, alt_date_str, route_type="fewest_stops"
+                                )
+                                st.session_state.alt_fastest_pdf = generate_routes_pdf(
+                                    fastest_routes[:5], origin, destination, alt_date_str, route_type="fastest"
+                                )
+                                st.session_state.alt_fewest_excel = generate_routes_excel(
+                                    fewest_stops_routes[:5], origin, destination, alt_date_str, route_type="fewest_stops"
+                                )
+                                st.session_state.alt_fastest_excel = generate_routes_excel(
+                                    fastest_routes[:5], origin, destination, alt_date_str, route_type="fastest"
+                                )
+                            
+                            # Download buttons
+                            st.markdown("#### 📄 PDF Reports")
+                            col_dl1, col_dl2 = st.columns(2)
+                            with col_dl1:
+                                st.download_button(
+                                    label=f"📄 Fewest Stops - {alt_date_str} (PDF)",
+                                    data=st.session_state.alt_fewest_pdf,
+                                    file_name=f"Routing_{origin}_to_{destination}_on_{alt_date_str}_Fewest_Stops.pdf",
+                                    mime="application/pdf",
+                                    use_container_width=True,
+                                    key=f"alt_dl_fewest_{cache_key}"
+                                )
+                            with col_dl2:
+                                st.download_button(
+                                    label=f"📄 Fastest Arriving - {alt_date_str} (PDF)",
+                                    data=st.session_state.alt_fastest_pdf,
+                                    file_name=f"Routing_{origin}_to_{destination}_on_{alt_date_str}_Fastest.pdf",
+                                    mime="application/pdf",
+                                    use_container_width=True,
+                                    key=f"alt_dl_fastest_{cache_key}"
+                                )
+                            
+                            st.markdown("#### 📊 Excel Reports")
+                            col_xl1, col_xl2 = st.columns(2)
+                            with col_xl1:
+                                st.download_button(
+                                    label=f"📊 Fewest Stops - {alt_date_str} (Excel)",
+                                    data=st.session_state.alt_fewest_excel,
+                                    file_name=f"Routing_{origin}_to_{destination}_on_{alt_date_str}_Fewest_Stops.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    use_container_width=True,
+                                    key=f"alt_dl_fewest_xl_{cache_key}"
+                                )
+                            with col_xl2:
+                                st.download_button(
+                                    label=f"📊 Fastest Arriving - {alt_date_str} (Excel)",
+                                    data=st.session_state.alt_fastest_excel,
+                                    file_name=f"Routing_{origin}_to_{destination}_on_{alt_date_str}_Fastest.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    use_container_width=True,
+                                    key=f"alt_dl_fastest_xl_{cache_key}"
+                                )
                             
                             found_alternative = True
                             break
@@ -2763,15 +3061,100 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
                     )
                 
                 else:
-                    st.warning(f"⚠️ No RadioPharma routes found departing on {selected_date}.")
-                    st.info("""
-                    **Possible reasons:**
-                    - No approved flights available on this date
-                    - All possible routes use prohibited flights
-                    - No valid transit points available for this origin-destination pair
+                    # No routes on selected date - search for next available
+                    st.warning(f"⚠️ No RadioPharma routes found departing on {selected_date}. Searching for next available dates...")
                     
-                    Try selecting a different date or contact UPS Healthcare Logistics for assistance.
-                    """)
+                    found_alternative = False
+                    for day_offset in range(1, 8):
+                        alt_date = search_date + timedelta(days=day_offset)
+                        alt_network = build_radiopharma_network(schedule_df, alt_date, rp_config)
+                        
+                        if alt_network:
+                            alt_routes = find_radiopharma_routes_for_date(
+                                alt_network, origin, destination, alt_date, rp_config,
+                                min_departure_time=min_departure_time
+                            )
+                            
+                            if alt_routes:
+                                st.success(f"✅ Found {len(alt_routes)} RadioPharma routes departing on **{alt_date.strftime('%Y-%m-%d (%A)')}** (+{day_offset} day(s))")
+                                
+                                fastest_routes, fewest_stops_routes = get_fastest_and_fewest_stops_routes(alt_routes)
+                                min_stops_overall = min(r['stops'] for r in alt_routes)
+                                
+                                # Show fewest stops routes
+                                st.markdown("### 🔗 Recommended - Fewest Stops RadioPharma Routes")
+                                st.caption(f"Routes departing on {alt_date.strftime('%Y-%m-%d')} with minimum connections")
+                                
+                                for i, route in enumerate(fewest_stops_routes[:3], 1):
+                                    route_str = " → ".join(route['path'])
+                                    total_hours = route['total_duration'] // 60
+                                    total_mins = route['total_duration'] % 60
+                                    arrival_time_str = route['arrival_datetime'].strftime('%Y-%m-%d %H:%M')
+                                    first_dep = route['route_info'][0]['departure']
+                                    
+                                    with st.expander(f"☢️ Option {i}: {route_str} (✅ {route['stops']} stop(s)) - Arrives: {arrival_time_str}", 
+                                                   expanded=(i == 1)):
+                                        st.markdown(f"""
+                                        - **Route:** {route_str}
+                                        - **Stops:** {route['stops']} (minimum)
+                                        - **Departure:** {alt_date.strftime('%Y-%m-%d')} at {first_dep}
+                                        - **Arrival:** {arrival_time_str}
+                                        - **Journey Time:** {total_hours}h {total_mins}m
+                                        """)
+                                        
+                                        for j, leg in enumerate(route['route_info'], 1):
+                                            st.write(f"Segment {j}: {leg['from']} → {leg['to']} | {leg['carrier']} {leg['flight']} | Dep: {leg['departure']} Arr: {leg['arrival']}")
+                                
+                                # Download section
+                                st.markdown("---")
+                                st.markdown("### 📥 Export RadioPharma Routes")
+                                
+                                alt_date_str = alt_date.strftime('%Y-%m-%d')
+                                rp_alt_cache_key = f"rp_alt_{origin}_{destination}_{alt_date_str}"
+                                
+                                if 'rp_alt_pdf_cache_key' not in st.session_state or st.session_state.get('rp_alt_pdf_cache_key') != rp_alt_cache_key:
+                                    st.session_state.rp_alt_pdf_cache_key = rp_alt_cache_key
+                                    st.session_state.rp_alt_fewest_pdf = generate_routes_pdf(
+                                        fewest_stops_routes[:5], origin, destination, alt_date_str, route_type="fewest_stops"
+                                    )
+                                    st.session_state.rp_alt_fewest_excel = generate_routes_excel(
+                                        fewest_stops_routes[:5], origin, destination, alt_date_str, route_type="fewest_stops"
+                                    )
+                                
+                                col_dl1, col_dl2 = st.columns(2)
+                                with col_dl1:
+                                    st.download_button(
+                                        label=f"📄 RadioPharma Routes - {alt_date_str} (PDF)",
+                                        data=st.session_state.rp_alt_fewest_pdf,
+                                        file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{alt_date_str}.pdf",
+                                        mime="application/pdf",
+                                        use_container_width=True,
+                                        key=f"rp_alt_dl_pdf_{rp_alt_cache_key}"
+                                    )
+                                with col_dl2:
+                                    st.download_button(
+                                        label=f"📊 RadioPharma Routes - {alt_date_str} (Excel)",
+                                        data=st.session_state.rp_alt_fewest_excel,
+                                        file_name=f"RadioPharma_Routing_{origin}_to_{destination}_on_{alt_date_str}.xlsx",
+                                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                        use_container_width=True,
+                                        key=f"rp_alt_dl_xl_{rp_alt_cache_key}"
+                                    )
+                                
+                                found_alternative = True
+                                break
+                    
+                    if not found_alternative:
+                        st.error(f"""
+                        ❌ No RadioPharma routes found from {origin} to {destination} in the next 7 days.
+                        
+                        **Possible reasons:**
+                        - No approved flights available
+                        - All possible routes use prohibited flights
+                        - No valid transit points available
+                        
+                        Please contact UPS Healthcare Logistics for assistance.
+                        """)
             else:
                 st.error("No RadioPharma flight network available for the selected date range.")
         
