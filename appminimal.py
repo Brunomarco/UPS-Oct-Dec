@@ -608,7 +608,7 @@ st.set_page_config(
 
 # Initialize session state for tab persistence
 if 'selected_tab' not in st.session_state:
-    st.session_state.selected_tab = "📋 Tracked Routes"
+    st.session_state.selected_tab = "Tracked Routes"
 
 # Initialize session state for caching route results (prevents reload on download)
 if 'cached_routes' not in st.session_state:
@@ -620,499 +620,586 @@ if 'cached_destination' not in st.session_state:
 if 'cached_date' not in st.session_state:
     st.session_state.cached_date = None
 
-# Premium CSS - Airline-Quality Dashboard Design
+# ============================================================================
+# ENTERPRISE CSS - UPS Healthcare Logistics Dashboard
+# Professional Grade Design for Global Deployment
+# ============================================================================
 st.markdown("""
     <style>
     /* ============================================
-       GOOGLE FONTS
+       TYPOGRAPHY - IBM Plex Sans (Enterprise Standard)
        ============================================ */
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
     
     /* ============================================
-       CSS VARIABLES
+       DESIGN TOKENS
        ============================================ */
     :root {
-        --ups-brown: #351C15;
-        --ups-brown-light: #4a2a1f;
-        --ups-brown-dark: #1a0e0a;
-        --ups-gold: #FFB500;
-        --ups-gold-light: #ffc933;
-        --ups-gold-dark: #cc9100;
-        --gray-50: #fafafa;
-        --gray-100: #f5f5f5;
-        --gray-200: #eeeeee;
-        --gray-300: #e0e0e0;
-        --gray-400: #bdbdbd;
-        --gray-500: #9e9e9e;
-        --gray-600: #757575;
-        --gray-700: #616161;
-        --gray-800: #424242;
-        --success: #10b981;
-        --warning: #f59e0b;
-        --error: #ef4444;
-        --info: #3b82f6;
+        /* UPS Brand Colors */
+        --ups-brown-900: #1a0e0a;
+        --ups-brown-800: #2d1810;
+        --ups-brown-700: #351C15;
+        --ups-brown-600: #4a2a1f;
+        --ups-brown-500: #5c372a;
+        --ups-gold-500: #FFB500;
+        --ups-gold-400: #ffc233;
+        --ups-gold-600: #d99a00;
+        
+        /* Neutral Palette */
+        --neutral-50: #fafbfc;
+        --neutral-100: #f4f5f7;
+        --neutral-200: #e8eaed;
+        --neutral-300: #dfe1e6;
+        --neutral-400: #c1c7d0;
+        --neutral-500: #97a0af;
+        --neutral-600: #6b778c;
+        --neutral-700: #505f79;
+        --neutral-800: #344563;
+        --neutral-900: #172b4d;
+        
+        /* Semantic Colors */
+        --success-50: #e3fcef;
+        --success-500: #00875a;
+        --success-600: #006644;
+        --warning-50: #fffae6;
+        --warning-500: #ff991f;
+        --error-50: #ffebe6;
+        --error-500: #de350b;
+        --info-50: #e6fcff;
+        --info-500: #0065ff;
+        
+        /* Spacing Scale */
+        --space-1: 4px;
+        --space-2: 8px;
+        --space-3: 12px;
+        --space-4: 16px;
+        --space-5: 20px;
+        --space-6: 24px;
+        --space-8: 32px;
+        --space-10: 40px;
+        
+        /* Border Radius */
+        --radius-sm: 4px;
+        --radius-md: 6px;
+        --radius-lg: 8px;
+        --radius-xl: 12px;
+        
+        /* Shadows */
+        --shadow-sm: 0 1px 2px rgba(23, 43, 77, 0.04);
+        --shadow-md: 0 1px 3px rgba(23, 43, 77, 0.1), 0 1px 2px rgba(23, 43, 77, 0.06);
+        --shadow-lg: 0 4px 6px rgba(23, 43, 77, 0.1), 0 2px 4px rgba(23, 43, 77, 0.06);
+        --shadow-xl: 0 10px 20px rgba(23, 43, 77, 0.1), 0 3px 6px rgba(23, 43, 77, 0.05);
     }
     
     /* ============================================
-       GLOBAL STYLES
+       GLOBAL RESET & BASE STYLES
        ============================================ */
     .main .block-container {
-        padding: 1.5rem 2rem 2rem 2rem;
-        max-width: 1600px;
+        padding: var(--space-6) var(--space-8);
+        max-width: 1440px;
+        background: var(--neutral-50);
     }
     
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--neutral-900);
+        -webkit-font-smoothing: antialiased;
     }
     
     h1, h2, h3, h4, h5, h6 {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         font-weight: 600;
-        color: var(--ups-brown);
-        letter-spacing: -0.02em;
+        color: var(--neutral-900);
+        letter-spacing: -0.01em;
+        margin: 0;
     }
     
+    h1 { font-size: 24px; line-height: 1.25; }
+    h2 { font-size: 20px; line-height: 1.3; }
+    h3 { font-size: 16px; line-height: 1.4; }
+    h4 { font-size: 14px; line-height: 1.4; }
+    
+    p { margin: 0 0 var(--space-3) 0; }
+    
     /* ============================================
-       SIDEBAR - PREMIUM DARK THEME
+       SIDEBAR - PROFESSIONAL DARK PANEL
        ============================================ */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1a0e0a 0%, #0d0705 100%);
+        background: var(--ups-brown-900);
+        border-right: 1px solid var(--ups-brown-800);
     }
     
     section[data-testid="stSidebar"] > div:first-child {
-        padding-top: 0;
+        padding: var(--space-5);
     }
     
-    /* Sidebar text colors */
     section[data-testid="stSidebar"] h1,
     section[data-testid="stSidebar"] h2,
     section[data-testid="stSidebar"] h3,
     section[data-testid="stSidebar"] h4,
     section[data-testid="stSidebar"] label,
     section[data-testid="stSidebar"] .stMarkdown,
-    section[data-testid="stSidebar"] p {
-        color: rgba(255, 255, 255, 0.95) !important;
-    }
-    
+    section[data-testid="stSidebar"] p,
     section[data-testid="stSidebar"] span {
-        color: rgba(255, 255, 255, 0.8) !important;
+        color: rgba(255, 255, 255, 0.92) !important;
     }
     
-    /* File Uploader in Sidebar - FIXED */
+    /* Sidebar File Uploader */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
-        background: rgba(255, 181, 0, 0.08);
-        border: 2px dashed rgba(255, 181, 0, 0.3);
-        border-radius: 12px;
-        padding: 1rem;
-        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px dashed rgba(255, 181, 0, 0.35);
+        border-radius: var(--radius-lg);
+        padding: var(--space-4);
+        transition: all 0.2s ease;
     }
     
     section[data-testid="stSidebar"] [data-testid="stFileUploader"]:hover {
-        background: rgba(255, 181, 0, 0.12);
-        border-color: var(--ups-gold);
-    }
-    
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] section {
-        background: transparent !important;
-        padding: 0 !important;
+        background: rgba(255, 181, 0, 0.08);
+        border-color: var(--ups-gold-500);
     }
     
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
-        background: var(--ups-gold) !important;
-        color: var(--ups-brown) !important;
+        background: var(--ups-gold-500) !important;
+        color: var(--ups-brown-700) !important;
         font-weight: 600 !important;
         border: none !important;
-        border-radius: 8px !important;
+        border-radius: var(--radius-md) !important;
+        padding: var(--space-2) var(--space-4) !important;
     }
     
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] small {
-        color: rgba(255, 255, 255, 0.6) !important;
+        color: rgba(255, 255, 255, 0.5) !important;
     }
     
-    /* Uploaded file display */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stMarkdownContainer"] {
-        background: rgba(255, 181, 0, 0.15) !important;
-        border: 1px solid rgba(255, 181, 0, 0.3) !important;
-        border-radius: 8px !important;
-        padding: 0.75rem 1rem !important;
-        margin-top: 0.5rem !important;
-    }
-    
-    /* Success message in sidebar */
     section[data-testid="stSidebar"] .stSuccess {
-        background: rgba(16, 185, 129, 0.15) !important;
-        border: 1px solid rgba(16, 185, 129, 0.3) !important;
-        color: #6ee7b7 !important;
+        background: rgba(0, 135, 90, 0.15) !important;
+        border: 1px solid rgba(0, 135, 90, 0.3) !important;
+        border-radius: var(--radius-md) !important;
     }
     
     /* ============================================
-       HEADER - PREMIUM DESIGN
+       MAIN HEADER - ENTERPRISE BRANDING
        ============================================ */
-    .main-header {
-        background: linear-gradient(135deg, var(--ups-brown) 0%, var(--ups-brown-light) 50%, var(--ups-brown) 100%);
+    .app-header {
+        background: var(--ups-brown-700);
+        border-radius: var(--radius-lg);
         padding: 0;
-        border-radius: 16px;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 40px rgba(53, 28, 21, 0.2), 0 0 0 1px rgba(255, 181, 0, 0.1);
+        margin-bottom: var(--space-6);
         overflow: hidden;
-        position: relative;
+        box-shadow: var(--shadow-lg);
     }
     
-    .main-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--ups-gold), var(--ups-gold-light), var(--ups-gold));
-    }
-    
-    .header-inner {
+    .app-header-inner {
         display: flex;
         align-items: center;
-        padding: 1.25rem 2rem;
-        gap: 2rem;
+        padding: var(--space-4) var(--space-6);
+        border-top: 3px solid var(--ups-gold-500);
     }
     
-    .header-logo-container {
+    .app-header-logo {
         background: white;
-        padding: 10px 14px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-md);
+        margin-right: var(--space-6);
+        box-shadow: var(--shadow-sm);
     }
     
-    .header-content {
+    .app-header-logo img {
+        height: 40px;
+        width: auto;
+        display: block;
+    }
+    
+    .app-header-content {
         flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
     }
     
-    .header-text h1 {
-        color: var(--ups-gold) !important;
-        font-size: 1.6rem;
-        font-weight: 700;
-        margin: 0;
-        letter-spacing: -0.03em;
+    .app-header-title {
+        color: var(--ups-gold-500) !important;
+        font-size: 20px !important;
+        font-weight: 600 !important;
+        margin: 0 0 2px 0 !important;
+        letter-spacing: -0.02em;
     }
     
-    .header-text p {
-        color: rgba(255, 255, 255, 0.75);
-        font-size: 0.875rem;
-        margin: 0.2rem 0 0 0;
+    .app-header-subtitle {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 13px;
         font-weight: 400;
+        margin: 0;
     }
     
-    .header-status {
+    .app-header-meta {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: var(--space-4);
     }
     
-    .status-badge {
-        background: rgba(16, 185, 129, 0.15);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        color: #6ee7b7;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
+    .status-indicator {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: var(--space-2);
+        background: rgba(0, 135, 90, 0.15);
+        border: 1px solid rgba(0, 135, 90, 0.25);
+        padding: var(--space-1) var(--space-3);
+        border-radius: 100px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #57d9a3;
     }
     
-    .status-badge::before {
+    .status-indicator::before {
         content: '';
         width: 6px;
         height: 6px;
-        background: #10b981;
+        background: #36b37e;
         border-radius: 50%;
-        animation: pulse 2s infinite;
     }
     
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-    
-    /* ============================================
-       METRIC CARDS - MODERN GLASSMORPHISM
-       ============================================ */
-    .metric-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 16px;
-        border: 1px solid var(--gray-200);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background: linear-gradient(180deg, var(--ups-gold) 0%, var(--ups-gold-dark) 100%);
-        border-radius: 4px 0 0 4px;
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 24px rgba(53, 28, 21, 0.1), 0 4px 8px rgba(0, 0, 0, 0.04);
-        border-color: var(--ups-gold);
-    }
-    
-    .metric-card h3 {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--ups-brown);
-        margin: 0 0 0.25rem 0;
-        line-height: 1;
-    }
-    
-    .metric-card p {
-        font-size: 0.8rem;
-        color: var(--gray-600);
-        margin: 0;
-        font-weight: 500;
+    .marken-badge {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.5);
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
     
     /* ============================================
-       TAB NAVIGATION - PILL STYLE
+       METRIC CARDS - DASHBOARD KPIs
        ============================================ */
+    .kpi-card {
+        background: white;
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-lg);
+        padding: var(--space-5);
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    
+    .kpi-card::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--ups-gold-500);
+        border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+    }
+    
+    .kpi-card:hover {
+        border-color: var(--neutral-300);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--ups-brown-700);
+        line-height: 1;
+        margin-bottom: var(--space-1);
+    }
+    
+    .kpi-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--neutral-600);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    
+    /* ============================================
+       NAVIGATION TABS - SEGMENTED CONTROL
+       ============================================ */
+    .nav-tabs-container {
+        background: var(--neutral-100);
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-lg);
+        padding: var(--space-1);
+        margin-bottom: var(--space-5);
+    }
+    
     div[data-testid="stHorizontalBlock"] .stRadio > div {
-        background: var(--gray-100);
-        padding: 6px;
-        border-radius: 12px;
-        gap: 4px;
-        border: 1px solid var(--gray-200);
+        background: transparent;
+        padding: 0;
+        gap: var(--space-1);
+        border: none;
     }
     
     div[data-testid="stHorizontalBlock"] .stRadio > div > label {
         background: transparent;
-        padding: 0.75rem 1.5rem;
-        border-radius: 10px;
+        padding: var(--space-3) var(--space-5);
+        border-radius: var(--radius-md);
         font-weight: 500;
-        font-size: 0.9rem;
-        transition: all 0.2s ease;
-        border: none;
+        font-size: 13px;
+        color: var(--neutral-700);
+        transition: all 0.15s ease;
+        border: 1px solid transparent;
     }
     
     div[data-testid="stHorizontalBlock"] .stRadio > div > label:hover {
         background: white;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        color: var(--neutral-900);
     }
     
     div[data-testid="stHorizontalBlock"] .stRadio > div > label[data-checked="true"] {
-        background: var(--ups-brown) !important;
-        color: var(--ups-gold) !important;
-        box-shadow: 0 4px 12px rgba(53, 28, 21, 0.25);
+        background: var(--ups-brown-700) !important;
+        color: var(--ups-gold-500) !important;
+        box-shadow: var(--shadow-md);
+        border-color: var(--ups-brown-600);
     }
     
     /* ============================================
-       BUTTONS - PREMIUM STYLE
+       BUTTONS - ENTERPRISE STYLE
        ============================================ */
     .stButton > button {
-        background: linear-gradient(135deg, var(--ups-brown) 0%, var(--ups-brown-light) 100%);
-        color: var(--ups-gold);
+        background: var(--ups-brown-700);
+        color: var(--ups-gold-500);
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 13px;
         border: none;
-        padding: 0.75rem 2rem;
-        border-radius: 10px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 12px rgba(53, 28, 21, 0.2);
-        letter-spacing: 0.02em;
+        padding: var(--space-3) var(--space-5);
+        border-radius: var(--radius-md);
+        transition: all 0.15s ease;
+        box-shadow: var(--shadow-sm);
+        letter-spacing: 0.01em;
     }
     
     .stButton > button:hover {
-        background: linear-gradient(135deg, var(--ups-gold) 0%, var(--ups-gold-light) 100%);
-        color: var(--ups-brown);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(255, 181, 0, 0.35);
+        background: var(--ups-brown-600);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
     }
     
     .stButton > button:active {
         transform: translateY(0);
+        box-shadow: var(--shadow-sm);
     }
     
     .stDownloadButton > button {
         background: white;
-        color: var(--ups-brown);
+        color: var(--ups-brown-700);
         font-weight: 600;
-        border: 2px solid var(--ups-brown);
-        border-radius: 10px;
-        transition: all 0.2s ease;
+        font-size: 13px;
+        border: 1px solid var(--neutral-300);
+        border-radius: var(--radius-md);
+        transition: all 0.15s ease;
     }
     
     .stDownloadButton > button:hover {
-        background: var(--ups-brown);
-        color: var(--ups-gold);
-        border-color: var(--ups-brown);
+        background: var(--neutral-50);
+        border-color: var(--ups-brown-700);
+        color: var(--ups-brown-700);
     }
     
     /* ============================================
-       FORM CONTROLS - REFINED
+       FORM CONTROLS
        ============================================ */
     .stSelectbox > div > div {
-        border-radius: 10px;
-        border: 2px solid var(--gray-200);
-        transition: all 0.2s ease;
+        border: 1px solid var(--neutral-300);
+        border-radius: var(--radius-md);
         background: white;
+        transition: all 0.15s ease;
     }
     
     .stSelectbox > div > div:hover {
-        border-color: var(--gray-300);
+        border-color: var(--neutral-400);
     }
     
     .stSelectbox > div > div:focus-within {
-        border-color: var(--ups-gold);
-        box-shadow: 0 0 0 4px rgba(255, 181, 0, 0.1);
+        border-color: var(--ups-gold-500);
+        box-shadow: 0 0 0 3px rgba(255, 181, 0, 0.12);
     }
     
     .stDateInput > div > div > input {
-        border-radius: 10px;
-        border: 2px solid var(--gray-200);
-        padding: 0.6rem 1rem;
+        border: 1px solid var(--neutral-300);
+        border-radius: var(--radius-md);
+        padding: var(--space-2) var(--space-3);
+        font-size: 13px;
     }
     
     .stDateInput > div > div:focus-within {
-        border-color: var(--ups-gold);
-        box-shadow: 0 0 0 4px rgba(255, 181, 0, 0.1);
+        border-color: var(--ups-gold-500);
+        box-shadow: 0 0 0 3px rgba(255, 181, 0, 0.12);
     }
     
     .stCheckbox > label {
+        font-size: 13px;
         font-weight: 500;
+        color: var(--neutral-800);
     }
     
     /* ============================================
-       SECTION CARDS
+       CONTENT PANELS
        ============================================ */
-    .section-card {
+    .content-panel {
         background: white;
-        border-radius: 16px;
-        padding: 1.75rem;
-        border: 1px solid var(--gray-200);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-lg);
+        padding: var(--space-6);
+        box-shadow: var(--shadow-sm);
     }
     
-    .info-card {
-        background: linear-gradient(135deg, #fffbeb 0%, white 100%);
-        border-left: 4px solid var(--ups-gold);
-        padding: 1rem 1.25rem;
-        border-radius: 0 12px 12px 0;
-        margin: 0.75rem 0;
+    .panel-header {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        margin-bottom: var(--space-5);
+        padding-bottom: var(--space-4);
+        border-bottom: 1px solid var(--neutral-200);
     }
     
-    .info-card strong {
-        color: var(--ups-brown);
+    .panel-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--neutral-100);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+    
+    .panel-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--neutral-900);
+    }
+    
+    .panel-description {
+        font-size: 13px;
+        color: var(--neutral-600);
     }
     
     /* ============================================
-       ROUTE RESULTS - PREMIUM CARDS
+       ROUTE RESULTS CARDS
        ============================================ */
-    .route-card {
+    .route-result-card {
         background: white;
-        padding: 1.5rem;
-        border-radius: 14px;
-        border: 1px solid var(--gray-200);
-        margin: 1rem 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        transition: all 0.2s ease;
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-lg);
+        padding: var(--space-5);
+        margin-bottom: var(--space-4);
+        transition: all 0.15s ease;
     }
     
-    .route-card:hover {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    .route-result-card:hover {
+        border-color: var(--neutral-300);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .route-result-card.recommended {
+        border-left: 3px solid var(--success-500);
+    }
+    
+    .route-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: var(--space-1) var(--space-2);
+        background: var(--neutral-100);
+        border-radius: var(--radius-sm);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--neutral-700);
+    }
+    
+    .route-tag.success {
+        background: var(--success-50);
+        color: var(--success-600);
+    }
+    
+    /* ============================================
+       ALERTS & NOTIFICATIONS
+       ============================================ */
+    .stSuccess > div {
+        background: var(--success-50) !important;
+        border: 1px solid rgba(0, 135, 90, 0.2) !important;
+        border-left: 3px solid var(--success-500) !important;
+        border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
+        padding: var(--space-3) var(--space-4) !important;
+    }
+    
+    .stWarning > div {
+        background: var(--warning-50) !important;
+        border: 1px solid rgba(255, 153, 31, 0.2) !important;
+        border-left: 3px solid var(--warning-500) !important;
+        border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
+        padding: var(--space-3) var(--space-4) !important;
+    }
+    
+    .stInfo > div {
+        background: var(--info-50) !important;
+        border: 1px solid rgba(0, 101, 255, 0.2) !important;
+        border-left: 3px solid var(--info-500) !important;
+        border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
+        padding: var(--space-3) var(--space-4) !important;
+    }
+    
+    .stError > div {
+        background: var(--error-50) !important;
+        border: 1px solid rgba(222, 53, 11, 0.2) !important;
+        border-left: 3px solid var(--error-500) !important;
+        border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
+        padding: var(--space-3) var(--space-4) !important;
+    }
+    
+    /* ============================================
+       EXPANDERS - COLLAPSIBLE SECTIONS
+       ============================================ */
+    .streamlit-expanderHeader {
+        background: var(--neutral-50) !important;
+        border: 1px solid var(--neutral-200) !important;
+        border-radius: var(--radius-md) !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        padding: var(--space-3) var(--space-4) !important;
+        color: var(--neutral-800) !important;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background: var(--neutral-100) !important;
+    }
+    
+    details[open] .streamlit-expanderHeader {
+        border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+        border-bottom: none !important;
+    }
+    
+    .streamlit-expanderContent {
+        border: 1px solid var(--neutral-200) !important;
+        border-top: none !important;
+        border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+        padding: var(--space-4) !important;
+        background: white !important;
     }
     
     /* ============================================
        DOWNLOAD SECTION
        ============================================ */
-    .download-section {
-        background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
-        padding: 1.5rem;
-        border-radius: 14px;
-        border: 1px solid var(--gray-200);
-        margin-top: 1.5rem;
+    .download-panel {
+        background: var(--neutral-50);
+        border: 1px solid var(--neutral-200);
+        border-radius: var(--radius-lg);
+        padding: var(--space-5);
+        margin-top: var(--space-6);
     }
     
-    .download-section h4 {
-        color: var(--ups-brown);
-        font-size: 1rem;
+    .download-panel-header {
+        font-size: 14px;
         font-weight: 600;
-        margin: 0 0 0.5rem 0;
+        color: var(--neutral-900);
+        margin-bottom: var(--space-1);
     }
     
-    /* ============================================
-       ALERTS - REFINED
-       ============================================ */
-    .stSuccess > div {
-        background: linear-gradient(135deg, #ecfdf5 0%, white 100%) !important;
-        border: 1px solid #a7f3d0 !important;
-        border-left: 4px solid var(--success) !important;
-        border-radius: 0 12px 12px 0 !important;
-    }
-    
-    .stWarning > div {
-        background: linear-gradient(135deg, #fffbeb 0%, white 100%) !important;
-        border: 1px solid #fde68a !important;
-        border-left: 4px solid var(--warning) !important;
-        border-radius: 0 12px 12px 0 !important;
-    }
-    
-    .stInfo > div {
-        background: linear-gradient(135deg, #eff6ff 0%, white 100%) !important;
-        border: 1px solid #bfdbfe !important;
-        border-left: 4px solid var(--info) !important;
-        border-radius: 0 12px 12px 0 !important;
-    }
-    
-    .stError > div {
-        background: linear-gradient(135deg, #fef2f2 0%, white 100%) !important;
-        border: 1px solid #fecaca !important;
-        border-left: 4px solid var(--error) !important;
-        border-radius: 0 12px 12px 0 !important;
-    }
-    
-    /* ============================================
-       EXPANDERS - MODERN STYLE
-       ============================================ */
-    .streamlit-expanderHeader {
-        background: var(--gray-50) !important;
-        border: 1px solid var(--gray-200) !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        padding: 1rem 1.25rem !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .streamlit-expanderHeader:hover {
-        background: var(--gray-100) !important;
-        border-color: var(--gray-300) !important;
-    }
-    
-    details[open] .streamlit-expanderHeader {
-        border-radius: 12px 12px 0 0 !important;
-        border-bottom: none !important;
-    }
-    
-    .streamlit-expanderContent {
-        border: 1px solid var(--gray-200) !important;
-        border-top: none !important;
-        border-radius: 0 0 12px 12px !important;
-        padding: 1.25rem !important;
-        background: white !important;
+    .download-panel-desc {
+        font-size: 13px;
+        color: var(--neutral-600);
+        margin-bottom: var(--space-4);
     }
     
     /* ============================================
@@ -1121,182 +1208,154 @@ st.markdown("""
     hr {
         border: none;
         height: 1px;
-        background: linear-gradient(90deg, transparent, var(--gray-300), transparent);
-        margin: 2rem 0;
+        background: var(--neutral-200);
+        margin: var(--space-6) 0;
     }
     
     /* ============================================
-       SCROLLBAR - MINIMAL
+       SCROLLBAR
        ============================================ */
     ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
     }
     
     ::-webkit-scrollbar-track {
-        background: transparent;
+        background: var(--neutral-100);
     }
     
     ::-webkit-scrollbar-thumb {
-        background: var(--gray-300);
-        border-radius: 10px;
+        background: var(--neutral-300);
+        border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--gray-400);
+        background: var(--neutral-400);
     }
     
     /* ============================================
-       CUSTOM CLASSES FOR COMPONENTS
+       UTILITY CLASSES
        ============================================ */
-    .sidebar-brand {
-        background: linear-gradient(135deg, rgba(255, 181, 0, 0.1) 0%, rgba(255, 181, 0, 0.05) 100%);
-        border: 1px solid rgba(255, 181, 0, 0.2);
-        border-radius: 14px;
-        padding: 1.25rem;
-        text-align: center;
-        margin-bottom: 1.5rem;
-    }
+    .text-muted { color: var(--neutral-600); }
+    .text-small { font-size: 12px; }
+    .text-xs { font-size: 11px; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .uppercase { text-transform: uppercase; letter-spacing: 0.04em; }
     
-    .sidebar-brand h2 {
-        color: var(--ups-gold) !important;
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
+    .mt-1 { margin-top: var(--space-1); }
+    .mt-2 { margin-top: var(--space-2); }
+    .mt-3 { margin-top: var(--space-3); }
+    .mt-4 { margin-top: var(--space-4); }
+    .mt-6 { margin-top: var(--space-6); }
     
-    .sidebar-section-label {
-        color: rgba(255, 181, 255, 0.6) !important;
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 0.75rem;
-        padding-left: 0.25rem;
-    }
-    
-    .contact-warning {
-        background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
-        border: 1px solid #fcd34d;
-        border-left: 4px solid #f59e0b;
-        padding: 1.25rem;
-        border-radius: 0 12px 12px 0;
-        margin: 1rem 0;
-    }
-    
-    .welcome-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        opacity: 0.9;
-    }
+    .mb-1 { margin-bottom: var(--space-1); }
+    .mb-2 { margin-bottom: var(--space-2); }
+    .mb-3 { margin-bottom: var(--space-3); }
+    .mb-4 { margin-bottom: var(--space-4); }
+    .mb-6 { margin-bottom: var(--space-6); }
     
     /* ============================================
        ANIMATIONS
        ============================================ */
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
+        from { opacity: 0; transform: translateY(4px); }
         to { opacity: 1; transform: translateY(0); }
     }
     
-    .metric-card, .section-card, .route-card {
-        animation: fadeIn 0.4s ease-out;
+    .kpi-card, .content-panel, .route-result-card {
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    /* ============================================
+       RESPONSIVE ADJUSTMENTS
+       ============================================ */
+    @media (max-width: 768px) {
+        .app-header-inner {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--space-3);
+        }
+        
+        .app-header-meta {
+            width: 100%;
+            justify-content: space-between;
+        }
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Header with UPS branding - Premium Design
+# ============================================================================
+# HEADER - Enterprise Branding
+# ============================================================================
 st.markdown("""
-<div class="main-header">
-    <div class="header-inner">
-        <div class="header-logo-container">
+<div class="app-header">
+    <div class="app-header-inner">
+        <div class="app-header-logo">
             <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/United_Parcel_Service_logo_2014.svg" 
-                 alt="UPS Logo" 
-                 style="height: 50px; width: auto;">
+                 alt="UPS Healthcare Logistics">
         </div>
-        <div class="header-content">
-            <div class="header-text">
-                <h1>Flight Routing System</h1>
-                <p>Healthcare Logistics • Precision Routing Dashboard</p>
-            </div>
-            <div class="header-status">
-                <div class="status-badge">System Online</div>
-            </div>
+        <div class="app-header-content">
+            <h1 class="app-header-title">Flight Routing System</h1>
+            <p class="app-header-subtitle">Healthcare Logistics · Global Route Optimization</p>
+        </div>
+        <div class="app-header-meta">
+            <div class="status-indicator">Operational</div>
+            <div class="marken-badge">Powered by Marken</div>
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Quick Info Bar
-col_info1, col_info2, col_info3 = st.columns(3)
-with col_info1:
-    st.markdown("""
-    <div class="info-card">
-        <strong>🎯 Purpose</strong><br>
-        <span style="color: #666; font-size: 0.9rem;">Optimize package routing across global airports</span>
+# System quick reference - clean enterprise style
+st.markdown("""
+<div style="display: flex; gap: 16px; margin-bottom: 24px;">
+    <div style="flex: 1; background: white; border: 1px solid #e8eaed; border-radius: 8px; padding: 16px; border-left: 3px solid #FFB500;">
+        <div style="font-size: 12px; font-weight: 600; color: #505f79; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">System Purpose</div>
+        <div style="font-size: 13px; color: #172b4d;">Global flight routing optimization for healthcare logistics shipments</div>
     </div>
-    """, unsafe_allow_html=True)
-with col_info2:
-    st.markdown("""
-    <div class="info-card">
-        <strong>⏱️ Connection Time</strong><br>
-        <span style="color: #666; font-size: 0.9rem;">Min: 1 hour • Max: 24 hours</span>
+    <div style="flex: 1; background: white; border: 1px solid #e8eaed; border-radius: 8px; padding: 16px; border-left: 3px solid #FFB500;">
+        <div style="font-size: 12px; font-weight: 600; color: #505f79; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Connection Windows</div>
+        <div style="font-size: 13px; color: #172b4d;">Minimum: 60 minutes · Maximum: 24 hours</div>
     </div>
-    """, unsafe_allow_html=True)
-with col_info3:
-    st.markdown("""
-    <div class="info-card">
-        <strong>📋 Route Types</strong><br>
-        <span style="color: #666; font-size: 0.9rem;">Tracked • Custom • RadioPharma</span>
+    <div style="flex: 1; background: white; border: 1px solid #e8eaed; border-radius: 8px; padding: 16px; border-left: 3px solid #FFB500;">
+        <div style="font-size: 12px; font-weight: 600; color: #505f79; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Available Modules</div>
+        <div style="font-size: 13px; color: #172b4d;">Tracked Routes · Custom Routes · RadioPharma</div>
     </div>
-    """, unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
-with st.expander("📖 **System Documentation & User Guide**", expanded=False):
+with st.expander("System Documentation", expanded=False):
     st.markdown("""
-    <div style="padding: 0.5rem 0;">
+    ### Overview
+    This dashboard provides UPS Healthcare Logistics with an automated flight routing system for optimizing 
+    package shipments between global airports. The system analyzes flight combinations to identify the most 
+    efficient routing options based on time constraints and operational requirements.
     
-    #### Executive Summary
-    This dashboard provides UPS logistics management with an automated flight routing system for optimizing package 
-    shipments between global airports. The system analyzes flight combinations to identify the most efficient routing 
-    options based on time constraints and operational requirements.
+    ### Route Prioritization
     
-    ---
+    | Priority | Method | Use Case |
+    |:--------:|--------|----------|
+    | 1 | **Fewest Stops** | Sensitive shipments requiring minimal handling |
+    | 2 | **Fastest Arrival** | Time-critical deliveries |
+    | 3 | **Direct Flights** | Non-stop options when available |
+    | 4 | **Date Extension** | Auto-search up to 7 days forward |
     
-    #### Route Discovery Process
+    ### Connection Requirements
+    - **Minimum Connection**: 60 minutes between arrival and departure
+    - **Maximum Connection**: 24 hours to prevent storage issues
+    - **Complex Routes**: Routes with 5+ stops require logistics team consultation
     
-    | Priority | Method | Description |
-    |----------|--------|-------------|
-    | 1️⃣ | **Fewest Stops** | Routes with minimum connections - best for sensitive shipments |
-    | 2️⃣ | **Fastest Arrival** | Routes that arrive earliest at destination |
-    | 3️⃣ | **Direct Flights** | Non-stop flights when available |
-    | 4️⃣ | **Date Extension** | Auto-search up to 7 days if no flights available |
+    ### Results Interpretation
     
-    ---
+    **Fewest Stops** (Primary recommendation)
+    - Minimizes cargo handling and transfer risk
+    - Sorted by total journey duration
     
-    #### Connection Time Requirements
-    
-    - **Minimum**: 60 minutes between arrival and next departure
-    - **Maximum**: 24 hours to avoid excessive storage costs
-    - **Complex Routes**: 5+ stops trigger recommendation to contact logistics team
-    
-    ---
-    
-    #### Results Sections
-    
-    **🔗 Fewest Stops Routes** (Shown First)
-    - Routes departing on selected date with minimum connections
-    - Sorted by total journey time (shortest first)
-    - Best for sensitive shipments requiring less handling
-    
-    **🚀 Fastest Arriving Routes**
-    - Routes departing on selected date sorted by arrival time
-    - Best for time-critical shipments
-    
-    </div>
-    """, unsafe_allow_html=True)
+    **Fastest Arriving**
+    - Optimizes for earliest destination arrival
+    - May include additional connections
+    """)
 
 st.markdown("---")
 
@@ -3706,18 +3765,31 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
 
 # Main Application
 def main():
-    # Sidebar with premium UPS branding
+    # Sidebar - Professional Enterprise Design
     with st.sidebar:
         # Brand header
         st.markdown("""
-        <div class="sidebar-brand">
-            <h2>✈️ UPS Flight System</h2>
+        <div style="background: rgba(255, 181, 0, 0.08); border: 1px solid rgba(255, 181, 0, 0.15); 
+                    border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 36px; height: 36px; background: #FFB500; border-radius: 6px; 
+                            display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 18px;">✈</span>
+                </div>
+                <div>
+                    <div style="color: #FFB500; font-size: 14px; font-weight: 600;">Flight Routing</div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 11px;">UPS Healthcare</div>
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
         # Data Upload Section
         st.markdown("""
-        <p class="sidebar-section-label">📁 DATA SOURCE</p>
+        <div style="color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 600; 
+                    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+            Data Source
+        </div>
         """, unsafe_allow_html=True)
         
         uploaded_file = st.file_uploader(
@@ -3729,33 +3801,33 @@ def main():
         
         if uploaded_file:
             st.markdown("""
-            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); 
-                        color: #6ee7b7; padding: 12px 16px; border-radius: 10px; margin-top: 12px;
-                        display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 1.2rem;">✓</span>
-                <span style="font-weight: 500;">File loaded successfully</span>
+            <div style="background: rgba(0, 135, 90, 0.12); border: 1px solid rgba(0, 135, 90, 0.25); 
+                        color: #57d9a3; padding: 10px 14px; border-radius: 6px; margin-top: 12px;
+                        display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                <span style="font-weight: 600;">✓</span>
+                <span>File loaded</span>
             </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
             
             # File Info Section
             st.markdown("""
-            <p class="sidebar-section-label">📋 FILE STRUCTURE</p>
-            <div style="background: rgba(255,255,255,0.03); padding: 14px; border-radius: 10px; 
-                        border: 1px solid rgba(255,255,255,0.08);">
-                <div style="color: rgba(255,255,255,0.5); font-size: 0.7rem; text-transform: uppercase; 
-                            letter-spacing: 0.05em; margin-bottom: 10px;">Required Sheets</div>
-                <div style="color: rgba(255,255,255,0.85); font-size: 0.85rem; line-height: 1.8;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #FFB500;">•</span> Flight Schedules
+            <div style="color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 600; 
+                        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+                File Structure
+            </div>
+            <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; 
+                        border: 1px solid rgba(255,255,255,0.06); font-size: 12px;">
+                <div style="color: rgba(255,255,255,0.7); line-height: 1.7;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: #FFB500; font-size: 8px;">●</span> Flight Schedules
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #FFB500;">•</span> Route Pairs (Data)
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: #FFB500; font-size: 8px;">●</span> Route Pairs (Data)
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: rgba(255,255,255,0.4);">•</span> 
-                        <span style="color: rgba(255,255,255,0.5);">RP Info (optional)</span>
+                    <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.4);">
+                        <span style="font-size: 8px;">○</span> RP Info (optional)
                     </div>
                 </div>
             </div>
@@ -3763,26 +3835,24 @@ def main():
         
         else:
             st.markdown("""
-            <div style="background: linear-gradient(135deg, rgba(255,181,0,0.08) 0%, rgba(255,181,0,0.03) 100%); 
-                        padding: 24px 16px; border-radius: 12px; text-align: center; margin-top: 12px;
-                        border: 1px dashed rgba(255,181,0,0.25);">
-                <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.8;">📤</div>
-                <div style="color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.5;">
-                    Drag & drop your Excel file<br>
-                    <span style="color: rgba(255,255,255,0.4); font-size: 0.75rem;">or click to browse</span>
+            <div style="background: rgba(255,181,0,0.05); padding: 20px 16px; border-radius: 8px; 
+                        text-align: center; margin-top: 12px; border: 1px dashed rgba(255,181,0,0.2);">
+                <div style="font-size: 24px; margin-bottom: 8px; opacity: 0.6;">↑</div>
+                <div style="color: rgba(255,255,255,0.6); font-size: 12px; line-height: 1.5;">
+                    Upload Excel file to begin<br>
+                    <span style="color: rgba(255,255,255,0.35); font-size: 11px;">Drag & drop or click</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
         # Footer
         st.markdown("""
-        <div style="position: fixed; bottom: 0; left: 0; width: inherit; 
-                    padding: 16px 20px; text-align: center;
-                    background: linear-gradient(180deg, transparent 0%, rgba(13,7,5,0.95) 30%);
-                    border-top: 1px solid rgba(255,255,255,0.05);">
-            <div style="color: rgba(255,255,255,0.35); font-size: 0.7rem; letter-spacing: 0.02em;">
+        <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 12px 16px; 
+                    text-align: center; background: linear-gradient(180deg, transparent 0%, #1a0e0a 40%);
+                    border-top: 1px solid rgba(255,255,255,0.03);">
+            <div style="color: rgba(255,255,255,0.25); font-size: 10px; letter-spacing: 0.02em;">
                 UPS Healthcare Logistics<br>
-                <span style="color: rgba(255,181,0,0.5);">© 2025 Marken</span>
+                <span style="color: rgba(255,181,0,0.4);">© 2025 Marken</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -3793,50 +3863,60 @@ def main():
             schedule_df, routes_df, rp_config = load_data(uploaded_file)
         
         if schedule_df is not None and routes_df is not None:
-            # Statistics Cards
-            st.markdown("### 📊 Network Overview")
+            # Statistics Cards - Enterprise KPIs
+            st.markdown("""
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                <div style="font-size: 16px; font-weight: 600; color: #172b4d;">Network Overview</div>
+                <div style="flex: 1; height: 1px; background: #e8eaed;"></div>
+            </div>
+            """, unsafe_allow_html=True)
             
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
                 st.markdown(f"""
-                <div class="metric-card">
-                    <h3>{len(schedule_df):,}</h3>
-                    <p>Total Flights</p>
+                <div class="kpi-card">
+                    <div class="kpi-value">{len(schedule_df):,}</div>
+                    <div class="kpi-label">Total Flights</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col2:
                 st.markdown(f"""
-                <div class="metric-card">
-                    <h3>{len(routes_df):,}</h3>
-                    <p>Route Pairs</p>
+                <div class="kpi-card">
+                    <div class="kpi-value">{len(routes_df):,}</div>
+                    <div class="kpi-label">Route Pairs</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col3:
                 st.markdown(f"""
-                <div class="metric-card">
-                    <h3>{schedule_df['Orig'].nunique()}</h3>
-                    <p>Airports</p>
+                <div class="kpi-card">
+                    <div class="kpi-value">{schedule_df['Orig'].nunique()}</div>
+                    <div class="kpi-label">Airports</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col4:
                 carriers = schedule_df['Carrier'].nunique() if 'Carrier' in schedule_df.columns else 0
                 st.markdown(f"""
-                <div class="metric-card">
-                    <h3>{carriers}</h3>
-                    <p>Carriers</p>
+                <div class="kpi-card">
+                    <div class="kpi-value">{carriers}</div>
+                    <div class="kpi-label">Carriers</div>
                 </div>
                 """, unsafe_allow_html=True)
             
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
             
-            # Tab Navigation
-            st.markdown("### 🧭 Route Finder")
+            # Tab Navigation - Enterprise Style
+            st.markdown("""
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                <div style="font-size: 16px; font-weight: 600; color: #172b4d;">Route Finder</div>
+                <div style="flex: 1; height: 1px; background: #e8eaed;"></div>
+            </div>
+            """, unsafe_allow_html=True)
             
-            tab_options = ["📋 Tracked Routes", "🔧 Custom Routes", "☢️ RadioPharma"]
+            tab_options = ["Tracked Routes", "Custom Routes", "RadioPharma"]
             
             # Get current index
             if st.session_state.selected_tab in tab_options:
@@ -3860,11 +3940,13 @@ def main():
             st.markdown('<div class="section-card">', unsafe_allow_html=True)
             
             # Tab 1: Tracked Routes
-            if selected_tab == "📋 Tracked Routes":
-                st.markdown("#### 🔍 Tracked Route Finder")
-                st.caption("Select from pre-defined route pairs in your Data sheet")
-                
-                st.markdown("<br>", unsafe_allow_html=True)
+            if selected_tab == "Tracked Routes":
+                st.markdown("""
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 15px; font-weight: 600; color: #172b4d; margin-bottom: 4px;">Tracked Route Finder</div>
+                    <div style="font-size: 13px; color: #6b778c;">Select from pre-defined route pairs configured in your data sheet</div>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 col1, col2 = st.columns(2)
                 
@@ -3951,11 +4033,13 @@ def main():
                         display_route_results(origin, destination, selected_date, schedule_df, min_departure_time=tracked_min_departure)
             
             # Tab 2: Custom Routes
-            elif selected_tab == "🔧 Custom Routes":
-                st.markdown("#### 🔍 Custom Route Finder")
-                st.caption("Select any origin and destination from all available airports")
-                
-                st.markdown("<br>", unsafe_allow_html=True)
+            elif selected_tab == "Custom Routes":
+                st.markdown("""
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 15px; font-weight: 600; color: #172b4d; margin-bottom: 4px;">Custom Route Finder</div>
+                    <div style="font-size: 13px; color: #6b778c;">Select any origin and destination from all available airports</div>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 col1, col2, col3 = st.columns(3)
                 
@@ -4039,16 +4123,18 @@ def main():
                             display_route_results(custom_origin, custom_destination, custom_date, schedule_df, min_departure_time=custom_min_departure)
             
             # Tab 3: RadioPharma
-            elif selected_tab == "☢️ RadioPharma":
-                st.markdown("#### ☢️ RadioPharma Route Finder")
-                st.caption("Specialized routing for radiopharmaceutical shipments with compliance constraints")
-                
-                st.markdown("<br>", unsafe_allow_html=True)
+            elif selected_tab == "RadioPharma":
+                st.markdown("""
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 15px; font-weight: 600; color: #172b4d; margin-bottom: 4px;">RadioPharma Route Finder</div>
+                    <div style="font-size: 13px; color: #6b778c;">Specialized routing for radiopharmaceutical shipments with compliance constraints</div>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 # Check if RadioPharma config is available
                 if rp_config is None:
                     st.warning("""
-                    ⚠️ **RadioPharma configuration not found.**
+                    **RadioPharma configuration not found.**
                     
                     The Excel file does not contain the 'RP Info' sheet with RadioPharma routing constraints.
                     Please ensure your Excel file includes the 'RP Info' sheet with:
