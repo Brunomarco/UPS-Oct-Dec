@@ -746,33 +746,117 @@ st.markdown("""
         color: rgba(255, 255, 255, 0.92) !important;
     }
     
-    /* Sidebar File Uploader */
+    /* ============================================
+       SIDEBAR FILE UPLOADER - DARK THEME
+       ============================================ */
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px dashed rgba(255, 181, 0, 0.35);
-        border-radius: var(--radius-lg);
-        padding: var(--space-4);
-        transition: all 0.2s ease;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
     }
     
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"]:hover {
-        background: rgba(255, 181, 0, 0.08);
-        border-color: var(--ups-gold-500);
+    /* The dropzone container */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > section {
+        background: rgba(255, 181, 0, 0.06) !important;
+        border: 1px dashed rgba(255, 181, 0, 0.3) !important;
+        border-radius: 8px !important;
+        padding: 20px 16px !important;
+        transition: all 0.2s ease !important;
     }
     
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > section:hover {
+        background: rgba(255, 181, 0, 0.1) !important;
+        border-color: rgba(255, 181, 0, 0.5) !important;
+    }
+    
+    /* Inner dropzone div */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > section > div {
+        background: transparent !important;
+    }
+    
+    /* The actual drop area */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
+        background: rgba(45, 24, 16, 0.8) !important;
+        border: 1px dashed rgba(255, 181, 0, 0.25) !important;
+        border-radius: 6px !important;
+        padding: 24px 16px !important;
+    }
+    
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"]:hover {
+        background: rgba(255, 181, 0, 0.08) !important;
+        border-color: rgba(255, 181, 0, 0.4) !important;
+    }
+    
+    /* Browse files button */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button,
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button {
         background: var(--ups-gold-500) !important;
         color: var(--ups-brown-700) !important;
         font-weight: 600 !important;
+        font-size: 13px !important;
         border: none !important;
-        border-radius: var(--radius-md) !important;
-        padding: var(--space-2) var(--space-4) !important;
+        border-radius: 6px !important;
+        padding: 8px 20px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+        transition: all 0.15s ease !important;
     }
     
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button:hover,
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] button:hover {
+        background: var(--ups-gold-400) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25) !important;
+    }
+    
+    /* Drag and drop text */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] span,
     section[data-testid="stSidebar"] [data-testid="stFileUploader"] small {
         color: rgba(255, 255, 255, 0.5) !important;
+        font-size: 12px !important;
     }
     
+    /* File size limit text */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > section > div:last-child {
+        color: rgba(255, 255, 255, 0.35) !important;
+        font-size: 11px !important;
+    }
+    
+    /* Uploaded file card */
+    section[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] {
+        background: rgba(255, 181, 0, 0.1) !important;
+        border: 1px solid rgba(255, 181, 0, 0.2) !important;
+        border-radius: 6px !important;
+        padding: 10px 12px !important;
+        margin-top: 12px !important;
+    }
+    
+    /* File name and size text */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderFile"] span {
+        color: rgba(255, 255, 255, 0.85) !important;
+        font-size: 12px !important;
+    }
+    
+    /* File icon */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderFile"] svg {
+        color: var(--ups-gold-500) !important;
+    }
+    
+    /* Delete file button */
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderFile"] button {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+        border-radius: 4px !important;
+        padding: 4px !important;
+        box-shadow: none !important;
+    }
+    
+    section[data-testid="stSidebar"] [data-testid="stFileUploaderFile"] button:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+        transform: none !important;
+    }
+    
+    /* Success message in sidebar */
     section[data-testid="stSidebar"] .stSuccess {
         background: rgba(0, 135, 90, 0.15) !important;
         border: 1px solid rgba(0, 135, 90, 0.3) !important;
@@ -3767,27 +3851,34 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
 def main():
     # Sidebar - Professional Enterprise Design
     with st.sidebar:
-        # Brand header
+        # Brand header - Clean and minimal
         st.markdown("""
-        <div style="background: rgba(255, 181, 0, 0.08); border: 1px solid rgba(255, 181, 0, 0.15); 
-                    border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 36px; height: 36px; background: #FFB500; border-radius: 6px; 
-                            display: flex; align-items: center; justify-content: center;">
-                    <span style="font-size: 18px;">✈</span>
+        <div style="margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #FFB500 0%, #e6a300 100%); 
+                            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+                            box-shadow: 0 2px 8px rgba(255, 181, 0, 0.3);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#351C15" stroke-width="2.5">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        <polyline points="7.5 4.21 12 6.81 16.5 4.21"/>
+                        <polyline points="7.5 19.79 7.5 14.6 3 12"/>
+                        <polyline points="21 12 16.5 14.6 16.5 19.79"/>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                    </svg>
                 </div>
                 <div>
-                    <div style="color: #FFB500; font-size: 14px; font-weight: 600;">Flight Routing</div>
-                    <div style="color: rgba(255,255,255,0.5); font-size: 11px;">UPS Healthcare</div>
+                    <div style="color: #FFB500; font-size: 15px; font-weight: 600; letter-spacing: -0.3px;">Flight Routing</div>
+                    <div style="color: rgba(255,255,255,0.45); font-size: 11px; font-weight: 500;">UPS Healthcare Logistics</div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Data Upload Section
+        # Data Upload Section Label
         st.markdown("""
-        <div style="color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 600; 
-                    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+        <div style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 600; 
+                    text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px;">
             Data Source
         </div>
         """, unsafe_allow_html=True)
@@ -3795,64 +3886,55 @@ def main():
         uploaded_file = st.file_uploader(
             "Upload Flight Schedule",
             type=['xlsx', 'xls'],
-            help="Upload your UPS Flight Schedule Excel file",
+            help="Upload your UPS Flight Schedule Excel file (.xlsx or .xls)",
             label_visibility="collapsed"
         )
         
         if uploaded_file:
-            st.markdown("""
-            <div style="background: rgba(0, 135, 90, 0.12); border: 1px solid rgba(0, 135, 90, 0.25); 
-                        color: #57d9a3; padding: 10px 14px; border-radius: 6px; margin-top: 12px;
-                        display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                <span style="font-weight: 600;">✓</span>
-                <span>File loaded</span>
-            </div>
-            """, unsafe_allow_html=True)
+            # Spacer
+            st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
             
-            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
-            
-            # File Info Section
+            # File Structure Info
             st.markdown("""
-            <div style="color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 600; 
-                        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
-                File Structure
+            <div style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 600; 
+                        text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px;">
+                Required Sheets
             </div>
-            <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 6px; 
-                        border: 1px solid rgba(255,255,255,0.06); font-size: 12px;">
-                <div style="color: rgba(255,255,255,0.7); line-height: 1.7;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span style="color: #FFB500; font-size: 8px;">●</span> Flight Schedules
+            <div style="background: rgba(255,255,255,0.02); padding: 14px 16px; border-radius: 6px; 
+                        border: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-size: 12px; line-height: 1.8;">
+                    <div style="display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.75);">
+                        <span style="color: #57d9a3;">✓</span> Flight Schedules
                     </div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span style="color: #FFB500; font-size: 8px;">●</span> Route Pairs (Data)
+                    <div style="display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.75);">
+                        <span style="color: #57d9a3;">✓</span> Route Pairs (Data)
                     </div>
-                    <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.4);">
-                        <span style="font-size: 8px;">○</span> RP Info (optional)
+                    <div style="display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.4);">
+                        <span style="color: rgba(255,255,255,0.3);">○</span> RP Info (optional)
                     </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
         else:
+            # Show helpful hint when no file uploaded
             st.markdown("""
-            <div style="background: rgba(255,181,0,0.05); padding: 20px 16px; border-radius: 8px; 
-                        text-align: center; margin-top: 12px; border: 1px dashed rgba(255,181,0,0.2);">
-                <div style="font-size: 24px; margin-bottom: 8px; opacity: 0.6;">↑</div>
-                <div style="color: rgba(255,255,255,0.6); font-size: 12px; line-height: 1.5;">
-                    Upload Excel file to begin<br>
-                    <span style="color: rgba(255,255,255,0.35); font-size: 11px;">Drag & drop or click</span>
+            <div style="margin-top: 16px; padding: 16px; background: rgba(255,255,255,0.02); 
+                        border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="color: rgba(255,255,255,0.5); font-size: 11px; line-height: 1.6;">
+                    <strong style="color: rgba(255,255,255,0.7);">Getting Started</strong><br>
+                    Upload your flight schedule Excel file to begin route optimization.
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
-        # Footer
+        # Footer - Fixed at bottom
         st.markdown("""
-        <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 12px 16px; 
-                    text-align: center; background: linear-gradient(180deg, transparent 0%, #1a0e0a 40%);
-                    border-top: 1px solid rgba(255,255,255,0.03);">
-            <div style="color: rgba(255,255,255,0.25); font-size: 10px; letter-spacing: 0.02em;">
-                UPS Healthcare Logistics<br>
-                <span style="color: rgba(255,181,0,0.4);">© 2025 Marken</span>
+        <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 16px 20px; 
+                    text-align: center; background: linear-gradient(180deg, transparent 0%, #1a0e0a 50%);
+                    border-top: 1px solid rgba(255,255,255,0.04);">
+            <div style="color: rgba(255,255,255,0.3); font-size: 10px; letter-spacing: 0.3px;">
+                UPS Healthcare Logistics · <span style="color: rgba(255,181,0,0.5);">Marken</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -4149,34 +4231,34 @@ def main():
                     col_rp1, col_rp2, col_rp3, col_rp4 = st.columns(4)
                     with col_rp1:
                         st.markdown(f"""
-                        <div class="metric-card" style="text-align: center;">
-                            <h3>{len(rp_config['approved_origins'])}</h3>
-                            <p>Approved Origins</p>
+                        <div class="kpi-card" style="text-align: center;">
+                            <div class="kpi-value">{len(rp_config['approved_origins'])}</div>
+                            <div class="kpi-label">Approved Origins</div>
                         </div>
                         """, unsafe_allow_html=True)
                     with col_rp2:
                         st.markdown(f"""
-                        <div class="metric-card" style="text-align: center;">
-                            <h3>{len(rp_config['approved_destinations'])}</h3>
-                            <p>Approved Destinations</p>
+                        <div class="kpi-card" style="text-align: center;">
+                            <div class="kpi-value">{len(rp_config['approved_destinations'])}</div>
+                            <div class="kpi-label">Approved Dest.</div>
                         </div>
                         """, unsafe_allow_html=True)
                     with col_rp3:
                         st.markdown(f"""
-                        <div class="metric-card" style="text-align: center;">
-                            <h3>{len(rp_config['prohibited_flights'])}</h3>
-                            <p>Prohibited Flights</p>
+                        <div class="kpi-card" style="text-align: center;">
+                            <div class="kpi-value">{len(rp_config['prohibited_flights'])}</div>
+                            <div class="kpi-label">Prohibited Flights</div>
                         </div>
                         """, unsafe_allow_html=True)
                     with col_rp4:
                         st.markdown(f"""
-                        <div class="metric-card" style="text-align: center;">
-                            <h3>✓</h3>
-                            <p>Compliance Active</p>
+                        <div class="kpi-card" style="text-align: center;">
+                            <div class="kpi-value" style="color: #00875a;">✓</div>
+                            <div class="kpi-label">Compliance Active</div>
                         </div>
                         """, unsafe_allow_html=True)
                     
-                    with st.expander("📋 View Approved Origins", expanded=False):
+                    with st.expander("View Approved Origins", expanded=False):
                         st.write(origins_list)
                     
                     st.markdown("<br>", unsafe_allow_html=True)
@@ -4269,55 +4351,90 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)  # Close section-card
     
     else:
-        # Welcome screen when no file is uploaded
+        # Welcome screen - Professional Enterprise Design
         st.markdown("""
-        <div style="text-align: center; padding: 3rem 2rem;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">📦</div>
-            <h2 style="color: #351C15; margin-bottom: 0.5rem;">Welcome to UPS Flight Routing System</h2>
-            <p style="color: #666; font-size: 1.1rem; margin-bottom: 2rem;">Upload your flight schedule to begin optimizing shipment routes</p>
+        <div style="text-align: center; padding: 60px 40px 40px 40px; max-width: 800px; margin: 0 auto;">
+            <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #FFB500 0%, #e6a300 100%); 
+                        border-radius: 16px; display: flex; align-items: center; justify-content: center;
+                        margin: 0 auto 24px auto; box-shadow: 0 4px 12px rgba(255, 181, 0, 0.25);">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#351C15" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <polyline points="7.5 4.21 12 6.81 16.5 4.21"/>
+                    <polyline points="7.5 19.79 7.5 14.6 3 12"/>
+                    <polyline points="21 12 16.5 14.6 16.5 19.79"/>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                </svg>
+            </div>
+            <h1 style="color: #172b4d; font-size: 28px; font-weight: 600; margin: 0 0 8px 0; letter-spacing: -0.5px;">
+                Flight Routing System
+            </h1>
+            <p style="color: #6b778c; font-size: 15px; margin: 0 0 40px 0; font-weight: 400;">
+                Upload your flight schedule to optimize healthcare logistics routes
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
+        # Feature cards
         col1, col2, col3 = st.columns(3)
         
         with col1:
             st.markdown("""
-            <div class="metric-card" style="text-align: center; padding: 2rem;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔗</div>
-                <h4 style="margin: 0.5rem 0;">Fewest Stops</h4>
-                <p style="font-size: 0.85rem; color: #666;">Minimize handling with fewer connections</p>
+            <div class="kpi-card" style="text-align: center; padding: 28px 20px;">
+                <div style="width: 44px; height: 44px; background: #e3fcef; border-radius: 10px; 
+                            display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00875a" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="8 12 12 16 16 8"/>
+                    </svg>
+                </div>
+                <div style="font-size: 15px; font-weight: 600; color: #172b4d; margin-bottom: 6px;">Fewest Stops</div>
+                <div style="font-size: 13px; color: #6b778c; line-height: 1.5;">Minimize cargo handling with fewer connections</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
             st.markdown("""
-            <div class="metric-card" style="text-align: center; padding: 2rem;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🚀</div>
-                <h4 style="margin: 0.5rem 0;">Fastest Arrival</h4>
-                <p style="font-size: 0.85rem; color: #666;">Get packages there as quickly as possible</p>
+            <div class="kpi-card" style="text-align: center; padding: 28px 20px;">
+                <div style="width: 44px; height: 44px; background: #e6fcff; border-radius: 10px; 
+                            display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0065ff" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div style="font-size: 15px; font-weight: 600; color: #172b4d; margin-bottom: 6px;">Fastest Arrival</div>
+                <div style="font-size: 13px; color: #6b778c; line-height: 1.5;">Optimize for earliest destination arrival</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col3:
             st.markdown("""
-            <div class="metric-card" style="text-align: center; padding: 2rem;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">☢️</div>
-                <h4 style="margin: 0.5rem 0;">RadioPharma</h4>
-                <p style="font-size: 0.85rem; color: #666;">Compliance-checked routes for sensitive shipments</p>
+            <div class="kpi-card" style="text-align: center; padding: 28px 20px;">
+                <div style="width: 44px; height: 44px; background: #fffae6; border-radius: 10px; 
+                            display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff991f" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <div style="font-size: 15px; font-weight: 600; color: #172b4d; margin-bottom: 6px;">RadioPharma</div>
+                <div style="font-size: 13px; color: #6b778c; line-height: 1.5;">Compliance-verified routes for sensitive cargo</div>
             </div>
             """, unsafe_allow_html=True)
         
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 32px;'></div>", unsafe_allow_html=True)
         
-        with st.expander("📋 **File Requirements**", expanded=True):
+        with st.expander("File Requirements", expanded=False):
             st.markdown("""
-            #### Required Excel Structure
+            ### Required Excel Structure
             
-            | Sheet Name | Purpose | Required Columns |
-            |------------|---------|------------------|
-            | **SchedDateLocalTimeFlightSchedul** | Flight schedules | Orig, Dest, Start Date, End Date, DOW, Sched Out/In, Blkhr |
-            | **Data** | Route pairs to track | Origin Airport, Destination Airport |
-            | **RP Info** *(optional)* | RadioPharma config | Prohibited flights (A), Origins (D), Destinations (E) |
+            Your Excel file should contain the following sheets:
+            
+            | Sheet Name | Purpose | Key Columns |
+            |:-----------|:--------|:------------|
+            | **Flight Schedule** | All available flights | Origin, Destination, Dates, Times |
+            | **Data** | Route pairs to optimize | Origin Airport, Destination Airport |
+            | **RP Info** *(optional)* | RadioPharma configuration | Prohibited flights, Approved airports |
             """)
 
 if __name__ == "__main__":
