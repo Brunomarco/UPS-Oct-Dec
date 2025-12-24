@@ -894,31 +894,17 @@ section[data-testid="stSidebar"] [data-testid="stFileUploaderFile"] button:hover
 }
 
 .app-header-v3-logo {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, var(--ups-brown-950) 0%, var(--ups-brown-900) 100%);
-    border-radius: var(--radius-lg);
+    width: 52px;
+    height: 58px;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-md);
     position: relative;
 }
 
-.app-header-v3-logo::after {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: calc(var(--radius-lg) + 2px);
-    background: linear-gradient(135deg, var(--ups-gold-500), transparent, var(--ups-gold-500));
-    opacity: 0.4;
-    z-index: -1;
-}
-
-.app-header-v3-logo img {
-    height: 26px;
-    width: auto;
-    filter: brightness(0) invert(1);
+.app-header-v3-logo svg {
+    filter: drop-shadow(0 4px 8px rgba(53, 28, 21, 0.3));
 }
 
 .app-header-v3-text h1 {
@@ -1381,7 +1367,14 @@ st.markdown("""
     <div class="app-header-v3-inner">
         <div class="app-header-v3-brand">
             <div class="app-header-v3-logo">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/United_Parcel_Service_logo_2014.svg" alt="UPS">
+                <svg width="44" height="50" viewBox="0 0 88 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- UPS Shield -->
+                    <path d="M44 0 C44 0 88 10 88 10 L88 55 C88 75 68 92 44 100 C20 92 0 75 0 55 L0 10 C0 10 44 0 44 0Z" fill="#351C15"/>
+                    <!-- Inner gold accent line -->
+                    <path d="M44 8 C44 8 80 16 80 16 L80 54 C80 70 63 84 44 91 C25 84 8 70 8 54 L8 16 C8 16 44 8 44 8Z" fill="none" stroke="#FFB500" stroke-width="1.5" opacity="0.4"/>
+                    <!-- UPS Text -->
+                    <text x="44" y="62" text-anchor="middle" fill="#FFB500" font-family="Arial, sans-serif" font-size="28" font-weight="bold">UPS</text>
+                </svg>
             </div>
             <div class="app-header-v3-text">
                 <h1>Flight Routing System <span class="badge">Healthcare</span></h1>
@@ -3808,15 +3801,12 @@ def main():
         st.markdown("""
         <div style="margin-bottom: 36px; padding-bottom: 28px; border-bottom: 1px solid rgba(255,255,255,0.06);">
             <div style="display: flex; align-items: center; gap: 14px;">
-                <div style="width: 42px; height: 42px; background: linear-gradient(135deg, #FFB500 0%, #FFC633 100%); 
-                            border-radius: 10px; display: flex; align-items: center; justify-content: center;
-                            box-shadow: 0 4px 12px rgba(255, 181, 0, 0.25);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#351C15" stroke-width="2.5">
-                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                        <path d="M2 17l10 5 10-5"/>
-                        <path d="M2 12l10 5 10-5"/>
-                    </svg>
-                </div>
+                <svg width="36" height="42" viewBox="0 0 88 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 8px rgba(255,181,0,0.3));">
+                    <!-- UPS Shield -->
+                    <path d="M44 0 C44 0 88 10 88 10 L88 55 C88 75 68 92 44 100 C20 92 0 75 0 55 L0 10 C0 10 44 0 44 0Z" fill="#FFB500"/>
+                    <!-- UPS Text -->
+                    <text x="44" y="62" text-anchor="middle" fill="#351C15" font-family="Arial, sans-serif" font-size="28" font-weight="bold">UPS</text>
+                </svg>
                 <div>
                     <div style="color: #FFB500; font-size: 15px; font-weight: 700; letter-spacing: -0.02em;">Flight Routing</div>
                     <div style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">UPS Healthcare</div>
