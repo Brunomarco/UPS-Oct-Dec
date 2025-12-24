@@ -1363,27 +1363,41 @@ details[open] .streamlit-expanderHeader {
 # HEADER COMPONENT
 # ============================================================================
 st.markdown("""
-<div class="app-header-v3">
-    <div class="app-header-v3-inner">
-        <div class="app-header-v3-brand">
-            <div class="app-header-v3-logo">
-                <svg width="44" height="50" viewBox="0 0 88 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- UPS Shield -->
-                    <path d="M44 0 C44 0 88 10 88 10 L88 55 C88 75 68 92 44 100 C20 92 0 75 0 55 L0 10 C0 10 44 0 44 0Z" fill="#351C15"/>
-                    <!-- Inner gold accent line -->
-                    <path d="M44 8 C44 8 80 16 80 16 L80 54 C80 70 63 84 44 91 C25 84 8 70 8 54 L8 16 C8 16 44 8 44 8Z" fill="none" stroke="#FFB500" stroke-width="1.5" opacity="0.4"/>
-                    <!-- UPS Text -->
-                    <text x="44" y="62" text-anchor="middle" fill="#FFB500" font-family="Arial, sans-serif" font-size="28" font-weight="bold">UPS</text>
+<div style="background: #351C15; border-radius: 12px; margin-bottom: 24px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+    <!-- Gold top border -->
+    <div style="height: 4px; background: linear-gradient(90deg, #FFB500, #CC9200, #FFB500);"></div>
+    
+    <!-- Header content -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px 28px;">
+        <!-- Left side: Logo + Text -->
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <!-- UPS Logo on white background -->
+            <div style="width: 56px; height: 56px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <svg width="40" height="46" viewBox="0 0 88 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M44 0 C44 0 88 10 88 10 L88 55 C88 75 68 92 44 100 C20 92 0 75 0 55 L0 10 C0 10 44 0 44 0Z" fill="#FFB500"/>
+                    <text x="44" y="62" text-anchor="middle" fill="#351C15" font-family="Arial Black, Arial, sans-serif" font-size="28" font-weight="900">UPS</text>
                 </svg>
             </div>
-            <div class="app-header-v3-text">
-                <h1>Flight Routing System <span class="badge">Healthcare</span></h1>
-                <p>Global Route Optimization · UPS Healthcare Logistics</p>
+            
+            <!-- Title text -->
+            <div>
+                <div style="color: #FFB500; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 2px;">Flight Routing System</div>
+                <div style="color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 500;">Healthcare Logistics · Global Route Optimization</div>
             </div>
         </div>
-        <div class="app-header-v3-status">
-            <span class="status-badge status-badge-live">Online</span>
-            <span class="status-badge status-badge-neutral">Marken Precision Logistics</span>
+        
+        <!-- Right side: Status badges -->
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <!-- Operational badge -->
+            <div style="display: flex; align-items: center; gap: 8px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 8px 16px; border-radius: 20px;">
+                <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px rgba(16,185,129,0.5);"></div>
+                <span style="color: #10b981; font-size: 12px; font-weight: 600;">Operational</span>
+            </div>
+            
+            <!-- Powered by Marken -->
+            <div style="color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">
+                Powered by <span style="color: rgba(255,255,255,0.6);">Marken</span>
+            </div>
         </div>
     </div>
 </div>
@@ -3801,15 +3815,16 @@ def main():
         st.markdown("""
         <div style="margin-bottom: 36px; padding-bottom: 28px; border-bottom: 1px solid rgba(255,255,255,0.06);">
             <div style="display: flex; align-items: center; gap: 14px;">
-                <svg width="36" height="42" viewBox="0 0 88 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 8px rgba(255,181,0,0.3));">
-                    <!-- UPS Shield -->
-                    <path d="M44 0 C44 0 88 10 88 10 L88 55 C88 75 68 92 44 100 C20 92 0 75 0 55 L0 10 C0 10 44 0 44 0Z" fill="#FFB500"/>
-                    <!-- UPS Text -->
-                    <text x="44" y="62" text-anchor="middle" fill="#351C15" font-family="Arial, sans-serif" font-size="28" font-weight="bold">UPS</text>
-                </svg>
+                <!-- UPS Logo on white background -->
+                <div style="width: 44px; height: 44px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                    <svg width="32" height="36" viewBox="0 0 88 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M44 0 C44 0 88 10 88 10 L88 55 C88 75 68 92 44 100 C20 92 0 75 0 55 L0 10 C0 10 44 0 44 0Z" fill="#FFB500"/>
+                        <text x="44" y="62" text-anchor="middle" fill="#351C15" font-family="Arial Black, Arial, sans-serif" font-size="28" font-weight="900">UPS</text>
+                    </svg>
+                </div>
                 <div>
                     <div style="color: #FFB500; font-size: 15px; font-weight: 700; letter-spacing: -0.02em;">Flight Routing</div>
-                    <div style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">UPS Healthcare</div>
+                    <div style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">Healthcare Logistics</div>
                 </div>
             </div>
         </div>
@@ -4378,19 +4393,18 @@ def main():
         # Welcome screen - Premium Design
         st.markdown("""
         <div style="text-align: center; padding: 5rem 2.5rem 3rem 2.5rem; max-width: 800px; margin: 0 auto;">
-            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--ups-gold-500, #FFB500) 0%, var(--ups-gold-400, #fbbf24) 100%); 
-                        border-radius: var(--radius-xl, 16px); display: flex; align-items: center; justify-content: center;
-                        margin: 0 auto 1.5rem auto; box-shadow: var(--shadow-gold, 0 4px 14px rgba(255,181,0,0.25));">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--ups-brown-950, #351C15)" stroke-width="2.5">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                    <path d="M2 17l10 5 10-5"/>
-                    <path d="M2 12l10 5 10-5"/>
+            <div style="width: 72px; height: 72px; background: white; border-radius: 12px; 
+                        display: flex; align-items: center; justify-content: center;
+                        margin: 0 auto 1.5rem auto; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                <svg width="52" height="60" viewBox="0 0 88 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M44 0 C44 0 88 10 88 10 L88 55 C88 75 68 92 44 100 C20 92 0 75 0 55 L0 10 C0 10 44 0 44 0Z" fill="#FFB500"/>
+                    <text x="44" y="62" text-anchor="middle" fill="#351C15" font-family="Arial Black, Arial, sans-serif" font-size="28" font-weight="900">UPS</text>
                 </svg>
             </div>
-            <h1 style="color: var(--neutral-900, #171717); font-size: 1.75rem; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: -0.03em;">
+            <h1 style="color: #171717; font-size: 1.75rem; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: -0.03em;">
                 Flight Routing System
             </h1>
-            <p style="color: var(--neutral-500, #737373); font-size: 0.9375rem; margin: 0; font-weight: 500;">
+            <p style="color: #737373; font-size: 0.9375rem; margin: 0; font-weight: 500;">
                 Upload your flight schedule to begin route optimization
             </p>
         </div>
