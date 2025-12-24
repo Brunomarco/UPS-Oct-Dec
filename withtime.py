@@ -4076,10 +4076,15 @@ def main():
                     st.session_state.tracked_search_params = current_params
                     st.session_state.tracked_search_triggered = True
                 
-                # Display results if we have matching cached params or just searched
-                if (st.session_state.get('tracked_search_params') == current_params and 
-                    st.session_state.get('tracked_search_triggered')):
-                    display_route_results(origin, destination, selected_date, schedule_df, min_departure_time=tracked_min_departure)
+                # Display results if search was triggered (results persist after downloads)
+                if st.session_state.get('tracked_search_triggered') and st.session_state.get('tracked_search_params'):
+                    # Use cached params to ensure consistency after download reruns
+                    cached_params = st.session_state.tracked_search_params
+                    cached_origin = cached_params['origin']
+                    cached_destination = cached_params['destination']
+                    cached_date = datetime.strptime(cached_params['date'], '%Y-%m-%d').date() if isinstance(cached_params['date'], str) else cached_params['date']
+                    cached_min_dep = cached_params['min_departure']
+                    display_route_results(cached_origin, cached_destination, cached_date, schedule_df, min_departure_time=cached_min_dep)
                     
                     # Option to clear results
                     st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
@@ -4191,11 +4196,16 @@ def main():
                             st.session_state.custom_search_params = current_custom_params
                             st.session_state.custom_search_triggered = True
                 
-                # Display results if we have matching cached params or just searched
-                if (st.session_state.get('custom_search_params') == current_custom_params and 
-                    st.session_state.get('custom_search_triggered') and
-                    custom_origin != custom_destination):
-                    display_route_results(custom_origin, custom_destination, custom_date, schedule_df, min_departure_time=custom_min_departure)
+                # Display results if search was triggered (results persist after downloads)
+                if st.session_state.get('custom_search_triggered') and st.session_state.get('custom_search_params'):
+                    # Use cached params to ensure consistency after download reruns
+                    cached_params = st.session_state.custom_search_params
+                    cached_origin = cached_params['origin']
+                    cached_destination = cached_params['destination']
+                    cached_date = datetime.strptime(cached_params['date'], '%Y-%m-%d').date() if isinstance(cached_params['date'], str) else cached_params['date']
+                    cached_min_dep = cached_params['min_departure']
+                    if cached_origin != cached_destination:
+                        display_route_results(cached_origin, cached_destination, cached_date, schedule_df, min_departure_time=cached_min_dep)
                     
                     # Option to clear results
                     st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
@@ -4361,11 +4371,16 @@ def main():
                             st.session_state.rp_search_params = current_rp_params
                             st.session_state.rp_search_triggered = True
                 
-                # Display results if we have matching cached params or just searched
-                if (st.session_state.get('rp_search_params') == current_rp_params and 
-                    st.session_state.get('rp_search_triggered') and
-                    rp_origin != rp_destination):
-                    display_radiopharma_results(rp_origin, rp_destination, rp_date, schedule_df, rp_config, min_departure_time=rp_min_departure)
+                # Display results if search was triggered (results persist after downloads)
+                if st.session_state.get('rp_search_triggered') and st.session_state.get('rp_search_params'):
+                    # Use cached params to ensure consistency after download reruns
+                    cached_params = st.session_state.rp_search_params
+                    cached_origin = cached_params['origin']
+                    cached_destination = cached_params['destination']
+                    cached_date = datetime.strptime(cached_params['date'], '%Y-%m-%d').date() if isinstance(cached_params['date'], str) else cached_params['date']
+                    cached_min_dep = cached_params['min_departure']
+                    if cached_origin != cached_destination:
+                        display_radiopharma_results(cached_origin, cached_destination, cached_date, schedule_df, rp_config, min_departure_time=cached_min_dep)
                     
                     # Option to clear results
                     st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
