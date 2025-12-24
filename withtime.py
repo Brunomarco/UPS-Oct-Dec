@@ -1364,37 +1364,25 @@ details[open] .streamlit-expanderHeader {
 # ============================================================================
 st.markdown("""
 <div style="background: #351C15; border-radius: 12px; margin-bottom: 24px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-    <!-- Gold top border -->
     <div style="height: 4px; background: linear-gradient(90deg, #FFB500, #CC9200, #FFB500);"></div>
-    
-    <!-- Header content -->
     <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px 28px;">
-        <!-- Left side: Logo + Text -->
         <div style="display: flex; align-items: center; gap: 20px;">
-            <!-- UPS Logo on white background -->
             <div style="width: 56px; height: 56px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 <svg width="40" height="46" viewBox="0 0 88 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M44 0 C44 0 88 10 88 10 L88 55 C88 75 68 92 44 100 C20 92 0 75 0 55 L0 10 C0 10 44 0 44 0Z" fill="#FFB500"/>
                     <text x="44" y="62" text-anchor="middle" fill="#351C15" font-family="Arial Black, Arial, sans-serif" font-size="28" font-weight="900">UPS</text>
                 </svg>
             </div>
-            
-            <!-- Title text -->
             <div>
                 <div style="color: #FFB500; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 2px;">Flight Routing System</div>
                 <div style="color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 500;">Healthcare Logistics · Global Route Optimization</div>
             </div>
         </div>
-        
-        <!-- Right side: Status badges -->
         <div style="display: flex; align-items: center; gap: 20px;">
-            <!-- Operational badge -->
             <div style="display: flex; align-items: center; gap: 8px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); padding: 8px 16px; border-radius: 20px;">
                 <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px rgba(16,185,129,0.5);"></div>
                 <span style="color: #10b981; font-size: 12px; font-weight: 600;">Operational</span>
             </div>
-            
-            <!-- Powered by Marken -->
             <div style="color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">
                 Powered by <span style="color: rgba(255,255,255,0.6);">Marken</span>
             </div>
@@ -3815,7 +3803,6 @@ def main():
         st.markdown("""
         <div style="margin-bottom: 36px; padding-bottom: 28px; border-bottom: 1px solid rgba(255,255,255,0.06);">
             <div style="display: flex; align-items: center; gap: 14px;">
-                <!-- UPS Logo on white background -->
                 <div style="width: 44px; height: 44px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
                     <svg width="32" height="36" viewBox="0 0 88 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M44 0 C44 0 88 10 88 10 L88 55 C88 75 68 92 44 100 C20 92 0 75 0 55 L0 10 C0 10 44 0 44 0Z" fill="#FFB500"/>
