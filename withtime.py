@@ -611,717 +611,790 @@ if 'selected_tab' not in st.session_state:
     st.session_state.selected_tab = "Tracked Routes"
 
 # Initialize session state for caching route results (prevents reload on download)
-if 'cached_routes' not in st.session_state:
-    st.session_state.cached_routes = None
-if 'cached_origin' not in st.session_state:
-    st.session_state.cached_origin = None
-if 'cached_destination' not in st.session_state:
-    st.session_state.cached_destination = None
-if 'cached_date' not in st.session_state:
-    st.session_state.cached_date = None
+# Tracked Routes cache
+if 'tracked_search_results' not in st.session_state:
+    st.session_state.tracked_search_results = None
+if 'tracked_search_params' not in st.session_state:
+    st.session_state.tracked_search_params = None
+if 'tracked_search_triggered' not in st.session_state:
+    st.session_state.tracked_search_triggered = False
+
+# Custom Routes cache  
+if 'custom_search_results' not in st.session_state:
+    st.session_state.custom_search_results = None
+if 'custom_search_params' not in st.session_state:
+    st.session_state.custom_search_params = None
+if 'custom_search_triggered' not in st.session_state:
+    st.session_state.custom_search_triggered = False
+
+# RadioPharma cache
+if 'rp_search_results' not in st.session_state:
+    st.session_state.rp_search_results = None
+if 'rp_search_params' not in st.session_state:
+    st.session_state.rp_search_params = None
+if 'rp_search_triggered' not in st.session_state:
+    st.session_state.rp_search_triggered = False
+
 
 # ============================================================================
-# ENTERPRISE CSS - UPS Healthcare Logistics Dashboard
-# Fortune 500 Grade Design System for Global Deployment
+# WORLD-CLASS DESIGN SYSTEM
+# UPS Healthcare Logistics - Flight Routing Platform
+# Design Language: Modern Enterprise (Linear/Stripe/Notion inspired)
 # ============================================================================
+
 st.markdown("""
-    <style>
-    /* ============================================
-       FONTS - Inter (Modern Enterprise Standard)
-       ============================================ */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    /* ============================================
-       DESIGN SYSTEM TOKENS
-       ============================================ */
-    :root {
-        /* Brand Colors */
-        --brand-primary: #351C15;
-        --brand-primary-dark: #1a0e0a;
-        --brand-primary-light: #4a2a1f;
-        --brand-accent: #FFB500;
-        --brand-accent-light: #ffc940;
-        --brand-accent-dark: #cc9100;
-        
-        /* Neutral Scale */
-        --gray-25: #fcfcfd;
-        --gray-50: #f9fafb;
-        --gray-100: #f2f4f7;
-        --gray-200: #e4e7ec;
-        --gray-300: #d0d5dd;
-        --gray-400: #98a2b3;
-        --gray-500: #667085;
-        --gray-600: #475467;
-        --gray-700: #344054;
-        --gray-800: #1d2939;
-        --gray-900: #101828;
-        
-        /* Semantic Colors */
-        --success-50: #ecfdf3;
-        --success-500: #12b76a;
-        --success-700: #027a48;
-        --warning-50: #fffaeb;
-        --warning-500: #f79009;
-        --warning-700: #b54708;
-        --error-50: #fef3f2;
-        --error-500: #f04438;
-        --error-700: #b42318;
-        --info-50: #f0f9ff;
-        --info-500: #0ba5ec;
-        --info-700: #026aa2;
-        
-        /* Spacing */
-        --space-xs: 4px;
-        --space-sm: 8px;
-        --space-md: 12px;
-        --space-lg: 16px;
-        --space-xl: 20px;
-        --space-2xl: 24px;
-        --space-3xl: 32px;
-        --space-4xl: 40px;
-        
-        /* Typography */
-        --font-xs: 11px;
-        --font-sm: 12px;
-        --font-base: 13px;
-        --font-md: 14px;
-        --font-lg: 16px;
-        --font-xl: 18px;
-        --font-2xl: 20px;
-        --font-3xl: 24px;
-        
-        /* Shadows */
-        --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
-        --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06);
-        --shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.1), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
-        --shadow-lg: 0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
-        --shadow-xl: 0 20px 24px -4px rgba(16, 24, 40, 0.08), 0 8px 8px -4px rgba(16, 24, 40, 0.03);
-        
-        /* Border Radius */
-        --radius-sm: 4px;
-        --radius-md: 6px;
-        --radius-lg: 8px;
-        --radius-xl: 12px;
-    }
-    
-    /* ============================================
-       GLOBAL BASE STYLES
-       ============================================ */
-    .main .block-container {
-        padding: var(--space-xl) var(--space-3xl) var(--space-3xl);
-        max-width: 1400px;
-        background: var(--gray-50);
-    }
-    
-    html, body, [class*="css"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: var(--font-base);
-        line-height: 1.5;
-        color: var(--gray-900);
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-    
-    h1, h2, h3, h4, h5, h6 {
-        font-family: 'Inter', sans-serif;
-        font-weight: 600;
-        color: var(--gray-900);
-        letter-spacing: -0.02em;
-        margin: 0;
-    }
-    
-    /* ============================================
-       SIDEBAR - EXECUTIVE DARK PANEL
-       ============================================ */
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
-        border-right: none;
-        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
-    }
-    
-    section[data-testid="stSidebar"] > div:first-child {
-        padding: var(--space-2xl) var(--space-xl);
-    }
-    
-    section[data-testid="stSidebar"] * {
-        color: rgba(255, 255, 255, 0.9) !important;
-    }
-    
-    /* Sidebar File Uploader - Seamless Dark Theme */
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-    }
-    
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > section,
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
-        background: rgba(255, 181, 0, 0.08) !important;
-        border: 1px dashed rgba(255, 181, 0, 0.3) !important;
-        border-radius: var(--radius-lg) !important;
-        padding: var(--space-xl) var(--space-lg) !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] > section:hover,
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"]:hover {
-        background: rgba(255, 181, 0, 0.12) !important;
-        border-color: rgba(255, 181, 0, 0.5) !important;
-    }
-    
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
-        background: var(--brand-accent) !important;
-        color: var(--brand-primary) !important;
-        font-weight: 600 !important;
-        font-size: var(--font-sm) !important;
-        border: none !important;
-        border-radius: var(--radius-md) !important;
-        padding: var(--space-sm) var(--space-lg) !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-        transition: all 0.15s ease !important;
-    }
-    
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] button:hover {
-        background: var(--brand-accent-light) !important;
-        transform: translateY(-1px) !important;
-    }
-    
-    section[data-testid="stSidebar"] [data-testid="stFileUploader"] small,
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] span {
-        color: rgba(255, 255, 255, 0.5) !important;
-        font-size: var(--font-xs) !important;
-    }
-    
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderFile"] {
-        background: rgba(255, 181, 0, 0.1) !important;
-        border: 1px solid rgba(255, 181, 0, 0.2) !important;
-        border-radius: var(--radius-md) !important;
-        margin-top: var(--space-md) !important;
-    }
-    
-    section[data-testid="stSidebar"] [data-testid="stFileUploaderFile"] button {
-        background: rgba(255, 255, 255, 0.1) !important;
-        padding: var(--space-xs) !important;
-        box-shadow: none !important;
-    }
-    
-    /* ============================================
-       MAIN HEADER - MINIMAL EXECUTIVE STYLE
-       ============================================ */
-    .enterprise-header {
-        background: white;
-        border: 1px solid var(--gray-200);
-        border-radius: var(--radius-xl);
-        padding: var(--space-lg) var(--space-2xl);
-        margin-bottom: var(--space-2xl);
-        box-shadow: var(--shadow-sm);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    
-    .enterprise-header-left {
-        display: flex;
-        align-items: center;
-        gap: var(--space-lg);
-    }
-    
-    .enterprise-header-logo {
-        height: 32px;
-        width: auto;
-    }
-    
-    .enterprise-header-divider {
-        width: 1px;
-        height: 24px;
-        background: var(--gray-200);
-    }
-    
-    .enterprise-header-title {
-        font-size: var(--font-lg);
-        font-weight: 600;
-        color: var(--gray-900);
-        letter-spacing: -0.01em;
-    }
-    
-    .enterprise-header-right {
-        display: flex;
-        align-items: center;
-        gap: var(--space-lg);
-    }
-    
-    .enterprise-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 100px;
-        font-size: var(--font-xs);
-        font-weight: 500;
-    }
-    
-    .enterprise-badge-success {
-        background: var(--success-50);
-        color: var(--success-700);
-    }
-    
-    .enterprise-badge-success::before {
-        content: '';
-        width: 6px;
-        height: 6px;
-        background: var(--success-500);
-        border-radius: 50%;
-    }
-    
-    .enterprise-badge-neutral {
-        background: var(--gray-100);
-        color: var(--gray-600);
-    }
-    
-    /* ============================================
-       DATA CARDS - CLEAN METRICS
-       ============================================ */
-    .metric-card-v2 {
-        background: white;
-        border: 1px solid var(--gray-200);
-        border-radius: var(--radius-lg);
-        padding: var(--space-xl);
-        transition: all 0.15s ease;
-        position: relative;
-    }
-    
-    .metric-card-v2:hover {
-        border-color: var(--gray-300);
-        box-shadow: var(--shadow-md);
-    }
-    
-    .metric-card-v2-value {
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--gray-900);
-        line-height: 1;
-        margin-bottom: 4px;
-        font-feature-settings: 'tnum';
-    }
-    
-    .metric-card-v2-label {
-        font-size: var(--font-sm);
-        font-weight: 500;
-        color: var(--gray-500);
-    }
-    
-    .metric-card-v2-accent {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3px;
-        background: var(--brand-accent);
-        border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-    }
-    
-    /* ============================================
-       SECTION HEADERS
-       ============================================ */
-    .section-header {
-        display: flex;
-        align-items: center;
-        gap: var(--space-md);
-        margin-bottom: var(--space-lg);
-    }
-    
-    .section-header-title {
-        font-size: var(--font-md);
-        font-weight: 600;
-        color: var(--gray-900);
-    }
-    
-    .section-header-line {
-        flex: 1;
-        height: 1px;
-        background: var(--gray-200);
-    }
-    
-    .section-header-badge {
-        font-size: var(--font-xs);
-        font-weight: 500;
-        color: var(--gray-500);
-        background: var(--gray-100);
-        padding: 2px 8px;
-        border-radius: 100px;
-    }
-    
-    /* ============================================
-       NAVIGATION TABS - SEGMENT CONTROL
-       ============================================ */
-    .stRadio > div {
-        background: var(--gray-100);
-        padding: 4px;
-        border-radius: var(--radius-lg);
-        gap: 4px;
-        border: 1px solid var(--gray-200);
-    }
-    
-    .stRadio > div > label {
-        background: transparent;
-        padding: 10px 20px;
-        border-radius: var(--radius-md);
-        font-weight: 500;
-        font-size: var(--font-sm);
-        color: var(--gray-600);
-        transition: all 0.15s ease;
-        border: 1px solid transparent;
-    }
-    
-    .stRadio > div > label:hover {
-        background: white;
-        color: var(--gray-900);
-    }
-    
-    .stRadio > div > label[data-checked="true"] {
-        background: white !important;
-        color: var(--gray-900) !important;
-        box-shadow: var(--shadow-sm);
-        border-color: var(--gray-200);
-    }
-    
-    /* ============================================
-       BUTTONS - PROFESSIONAL STYLE
-       ============================================ */
-    .stButton > button {
-        background: var(--brand-primary);
-        color: white;
-        font-weight: 500;
-        font-size: var(--font-sm);
-        border: none;
-        padding: 10px 18px;
-        border-radius: var(--radius-md);
-        transition: all 0.15s ease;
-        box-shadow: var(--shadow-xs);
-    }
-    
-    .stButton > button:hover {
-        background: var(--brand-primary-light);
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .stButton > button:active {
-        transform: scale(0.98);
-    }
-    
-    .stDownloadButton > button {
-        background: white;
-        color: var(--gray-700);
-        font-weight: 500;
-        font-size: var(--font-sm);
-        border: 1px solid var(--gray-300);
-        border-radius: var(--radius-md);
-        padding: 10px 18px;
-        transition: all 0.15s ease;
-    }
-    
-    .stDownloadButton > button:hover {
-        background: var(--gray-50);
-        border-color: var(--gray-400);
-        color: var(--gray-900);
-    }
-    
-    /* ============================================
-       FORM CONTROLS
-       ============================================ */
-    .stSelectbox > div > div,
-    .stMultiSelect > div > div {
-        border: 1px solid var(--gray-300);
-        border-radius: var(--radius-md);
-        background: white;
-        transition: all 0.15s ease;
-        font-size: var(--font-sm);
-    }
-    
-    .stSelectbox > div > div:hover,
-    .stMultiSelect > div > div:hover {
-        border-color: var(--gray-400);
-    }
-    
-    .stSelectbox > div > div:focus-within,
-    .stMultiSelect > div > div:focus-within {
-        border-color: var(--brand-accent);
-        box-shadow: 0 0 0 3px rgba(255, 181, 0, 0.15);
-    }
-    
-    .stDateInput > div > div > input,
-    .stTimeInput > div > div > input {
-        border: 1px solid var(--gray-300);
-        border-radius: var(--radius-md);
-        padding: 8px 12px;
-        font-size: var(--font-sm);
-    }
-    
-    .stDateInput > div > div:focus-within,
-    .stTimeInput > div > div:focus-within {
-        border-color: var(--brand-accent);
-        box-shadow: 0 0 0 3px rgba(255, 181, 0, 0.15);
-    }
-    
-    .stCheckbox > label {
-        font-size: var(--font-sm);
-        font-weight: 500;
-        color: var(--gray-700);
-    }
-    
-    /* ============================================
-       CONTENT PANELS
-       ============================================ */
-    .content-panel-v2 {
-        background: white;
-        border: 1px solid var(--gray-200);
-        border-radius: var(--radius-xl);
-        padding: var(--space-2xl);
-        box-shadow: var(--shadow-xs);
-    }
-    
-    .panel-header-v2 {
-        margin-bottom: var(--space-xl);
-        padding-bottom: var(--space-lg);
-        border-bottom: 1px solid var(--gray-100);
-    }
-    
-    .panel-title-v2 {
-        font-size: var(--font-md);
-        font-weight: 600;
-        color: var(--gray-900);
-        margin-bottom: 4px;
-    }
-    
-    .panel-subtitle-v2 {
-        font-size: var(--font-sm);
-        color: var(--gray-500);
-    }
-    
-    /* ============================================
-       ROUTE RESULT CARDS
-       ============================================ */
-    .route-card-v2 {
-        background: white;
-        border: 1px solid var(--gray-200);
-        border-radius: var(--radius-lg);
-        padding: var(--space-lg);
-        margin-bottom: var(--space-md);
-        transition: all 0.15s ease;
-    }
-    
-    .route-card-v2:hover {
-        border-color: var(--gray-300);
-        box-shadow: var(--shadow-sm);
-    }
-    
-    .route-card-v2-recommended {
-        border-left: 3px solid var(--success-500);
-    }
-    
-    .route-tag-v2 {
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 8px;
-        border-radius: var(--radius-sm);
-        font-size: var(--font-xs);
-        font-weight: 500;
-    }
-    
-    .route-tag-v2-success {
-        background: var(--success-50);
-        color: var(--success-700);
-    }
-    
-    .route-tag-v2-warning {
-        background: var(--warning-50);
-        color: var(--warning-700);
-    }
-    
-    .route-tag-v2-info {
-        background: var(--info-50);
-        color: var(--info-700);
-    }
-    
-    /* ============================================
-       ALERTS
-       ============================================ */
-    .stSuccess > div {
-        background: var(--success-50) !important;
-        border: 1px solid rgba(18, 183, 106, 0.2) !important;
-        border-left: 3px solid var(--success-500) !important;
-        border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
-        color: var(--success-700) !important;
-        font-size: var(--font-sm) !important;
-    }
-    
-    .stWarning > div {
-        background: var(--warning-50) !important;
-        border: 1px solid rgba(247, 144, 9, 0.2) !important;
-        border-left: 3px solid var(--warning-500) !important;
-        border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
-        color: var(--warning-700) !important;
-        font-size: var(--font-sm) !important;
-    }
-    
-    .stInfo > div {
-        background: var(--info-50) !important;
-        border: 1px solid rgba(11, 165, 236, 0.2) !important;
-        border-left: 3px solid var(--info-500) !important;
-        border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
-        color: var(--info-700) !important;
-        font-size: var(--font-sm) !important;
-    }
-    
-    .stError > div {
-        background: var(--error-50) !important;
-        border: 1px solid rgba(240, 68, 56, 0.2) !important;
-        border-left: 3px solid var(--error-500) !important;
-        border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
-        color: var(--error-700) !important;
-        font-size: var(--font-sm) !important;
-    }
-    
-    /* ============================================
-       EXPANDERS
-       ============================================ */
-    .streamlit-expanderHeader {
-        background: var(--gray-50) !important;
-        border: 1px solid var(--gray-200) !important;
-        border-radius: var(--radius-md) !important;
-        font-size: var(--font-sm) !important;
-        font-weight: 500 !important;
-        padding: var(--space-md) var(--space-lg) !important;
-        color: var(--gray-700) !important;
-    }
-    
-    .streamlit-expanderHeader:hover {
-        background: var(--gray-100) !important;
-    }
-    
-    details[open] .streamlit-expanderHeader {
-        border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
-        border-bottom-color: transparent !important;
-    }
-    
-    .streamlit-expanderContent {
-        border: 1px solid var(--gray-200) !important;
-        border-top: none !important;
-        border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
-        padding: var(--space-lg) !important;
-        background: white !important;
-        font-size: var(--font-sm) !important;
-    }
-    
-    /* ============================================
-       DATA TABLES
-       ============================================ */
-    .stDataFrame {
-        border: 1px solid var(--gray-200);
-        border-radius: var(--radius-md);
-        overflow: hidden;
-    }
-    
-    /* ============================================
-       SCROLLBAR
-       ============================================ */
-    ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: var(--gray-100);
-        border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: var(--gray-300);
-        border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--gray-400);
-    }
-    
-    /* ============================================
-       UTILITY CLASSES
-       ============================================ */
-    .text-muted { color: var(--gray-500); }
-    .text-sm { font-size: var(--font-sm); }
-    .text-xs { font-size: var(--font-xs); }
-    .font-medium { font-weight: 500; }
-    .font-semibold { font-weight: 600; }
-    
-    /* ============================================
-       ANIMATIONS
-       ============================================ */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .metric-card-v2, .content-panel-v2, .route-card-v2 {
-        animation: fadeIn 0.3s ease-out;
-    }
-    
-    /* ============================================
-       RESPONSIVE
-       ============================================ */
-    @media (max-width: 768px) {
-        .enterprise-header {
-            flex-direction: column;
-            gap: var(--space-md);
-            text-align: center;
-        }
-        
-        .enterprise-header-left,
-        .enterprise-header-right {
-            justify-content: center;
-        }
-    }
-    </style>
+<style>
+/* ============================================
+   CUSTOM FONTS
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ============================================
+   CSS CUSTOM PROPERTIES (Design Tokens)
+   ============================================ */
+:root {
+    /* === UPS Brand Palette === */
+    --ups-brown-50: #fdf8f6;
+    --ups-brown-100: #f2e8e5;
+    --ups-brown-200: #eaddd7;
+    --ups-brown-300: #e0cec7;
+    --ups-brown-400: #d2bab0;
+    --ups-brown-500: #bfa094;
+    --ups-brown-600: #a18072;
+    --ups-brown-700: #977669;
+    --ups-brown-800: #846358;
+    --ups-brown-900: #43302b;
+    --ups-brown-950: #351C15;
+    --ups-brown-deep: #1a0e0a;
+    
+    /* === UPS Gold Palette === */
+    --ups-gold-50: #fffbeb;
+    --ups-gold-100: #fef3c7;
+    --ups-gold-200: #fde68a;
+    --ups-gold-300: #fcd34d;
+    --ups-gold-400: #fbbf24;
+    --ups-gold-500: #FFB500;
+    --ups-gold-600: #d97706;
+    --ups-gold-700: #b45309;
+    
+    /* === Neutral Palette === */
+    --neutral-0: #ffffff;
+    --neutral-50: #fafafa;
+    --neutral-100: #f5f5f5;
+    --neutral-150: #ededed;
+    --neutral-200: #e5e5e5;
+    --neutral-300: #d4d4d4;
+    --neutral-400: #a3a3a3;
+    --neutral-500: #737373;
+    --neutral-600: #525252;
+    --neutral-700: #404040;
+    --neutral-800: #262626;
+    --neutral-900: #171717;
+    --neutral-950: #0a0a0a;
+    
+    /* === Semantic Colors === */
+    --success-light: #ecfdf5;
+    --success-base: #10b981;
+    --success-dark: #059669;
+    --warning-light: #fffbeb;
+    --warning-base: #f59e0b;
+    --warning-dark: #d97706;
+    --error-light: #fef2f2;
+    --error-base: #ef4444;
+    --error-dark: #dc2626;
+    --info-light: #eff6ff;
+    --info-base: #3b82f6;
+    --info-dark: #2563eb;
+    
+    /* === Shadows === */
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+    --shadow-gold: 0 4px 14px 0 rgb(255 181 0 / 0.25);
+    --shadow-card: 0 0 0 1px rgb(0 0 0 / 0.03), 0 2px 4px rgb(0 0 0 / 0.05), 0 12px 24px rgb(0 0 0 / 0.05);
+    
+    /* === Border Radius === */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 20px;
+    --radius-full: 9999px;
+    
+    /* === Transitions === */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+    --duration-fast: 150ms;
+    --duration-base: 200ms;
+    --duration-slow: 300ms;
+}
+
+/* ============================================
+   GLOBAL RESET & BASE STYLES
+   ============================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* ============================================
+   MAIN CONTAINER
+   ============================================ */
+.main .block-container {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 1440px;
+    background: linear-gradient(180deg, var(--neutral-50) 0%, var(--neutral-0) 100%);
+}
+
+/* ============================================
+   SIDEBAR - PREMIUM DARK THEME
+   ============================================ */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, var(--ups-brown-950) 0%, var(--ups-brown-deep) 100%);
+}
+
+section[data-testid="stSidebar"]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, var(--ups-gold-500) 0%, transparent 50%, var(--ups-gold-500) 100%);
+    opacity: 0.2;
+}
+
+section[data-testid="stSidebar"] > div:first-child {
+    padding: 1.75rem 1.5rem;
+}
+
+section[data-testid="stSidebar"] * {
+    color: rgba(255, 255, 255, 0.87) !important;
+}
+
+/* Sidebar Labels */
+section[data-testid="stSidebar"] label {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* === FILE UPLOADER - SEAMLESS DARK INTEGRATION === */
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] > section,
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {
+    background: linear-gradient(135deg, rgba(255,181,0,0.06) 0%, rgba(255,181,0,0.02) 100%) !important;
+    border: 1.5px dashed rgba(255,181,0,0.25) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: 1.5rem 1.25rem !important;
+    transition: all var(--duration-base) var(--ease-out) !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] > section:hover,
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"]:hover {
+    background: linear-gradient(135deg, rgba(255,181,0,0.1) 0%, rgba(255,181,0,0.04) 100%) !important;
+    border-color: rgba(255,181,0,0.4) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow-gold) !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] button {
+    background: linear-gradient(135deg, var(--ups-gold-500) 0%, var(--ups-gold-400) 100%) !important;
+    color: var(--ups-brown-950) !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.02em !important;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0.625rem 1.25rem !important;
+    box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+    transition: all var(--duration-fast) var(--ease-out) !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] button:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow-md), var(--shadow-gold), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stFileUploader"] small,
+section[data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] span {
+    color: rgba(255,255,255,0.35) !important;
+    font-size: 11px !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stFileUploaderFile"] {
+    background: rgba(255,181,0,0.08) !important;
+    border: 1px solid rgba(255,181,0,0.15) !important;
+    border-radius: var(--radius-md) !important;
+    margin-top: 0.75rem !important;
+    padding: 0.75rem !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stFileUploaderFile"] button {
+    background: rgba(255,255,255,0.08) !important;
+    box-shadow: none !important;
+    padding: 0.25rem !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stFileUploaderFile"] button:hover {
+    background: rgba(255,255,255,0.15) !important;
+    transform: none !important;
+}
+
+/* ============================================
+   HEADER COMPONENT
+   ============================================ */
+.app-header-v3 {
+    background: var(--neutral-0);
+    border-radius: var(--radius-xl);
+    margin-bottom: 1.75rem;
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+}
+
+.app-header-v3::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--ups-brown-950), var(--ups-gold-500), var(--ups-brown-950));
+}
+
+.app-header-v3-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.75rem;
+}
+
+.app-header-v3-brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.app-header-v3-logo {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--ups-brown-950) 0%, var(--ups-brown-900) 100%);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    position: relative;
+}
+
+.app-header-v3-logo::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: calc(var(--radius-lg) + 2px);
+    background: linear-gradient(135deg, var(--ups-gold-500), transparent, var(--ups-gold-500));
+    opacity: 0.4;
+    z-index: -1;
+}
+
+.app-header-v3-logo img {
+    height: 26px;
+    width: auto;
+    filter: brightness(0) invert(1);
+}
+
+.app-header-v3-text h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+    margin: 0;
+    letter-spacing: -0.025em;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.app-header-v3-text h1 .badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--ups-gold-600);
+    background: var(--ups-gold-50);
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid var(--ups-gold-200);
+}
+
+.app-header-v3-text p {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--neutral-500);
+    margin: 0.125rem 0 0 0;
+    letter-spacing: -0.01em;
+}
+
+.app-header-v3-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.status-badge-live {
+    background: linear-gradient(135deg, var(--success-light) 0%, rgba(16,185,129,0.08) 100%);
+    color: var(--success-dark);
+    border: 1px solid rgba(16,185,129,0.2);
+}
+
+.status-badge-live::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--success-base);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.2);
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(16,185,129,0.2); }
+    50% { box-shadow: 0 0 0 4px rgba(16,185,129,0.1); }
+}
+
+.status-badge-neutral {
+    background: var(--neutral-100);
+    color: var(--neutral-600);
+    border: 1px solid var(--neutral-200);
+}
+
+/* ============================================
+   DATA CARDS
+   ============================================ */
+.stat-card {
+    background: var(--neutral-0);
+    border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    transition: all var(--duration-base) var(--ease-out);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--ups-gold-500), var(--ups-gold-300));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    opacity: 0;
+    transition: opacity var(--duration-base) var(--ease-out);
+}
+
+.stat-card:hover {
+    border-color: var(--neutral-300);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+    line-height: 1;
+    margin-bottom: 0.375rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+}
+
+.stat-card-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--neutral-500);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* ============================================
+   SECTION TITLES
+   ============================================ */
+.section-title-v3 {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.section-title-v3-text {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--neutral-900);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+}
+
+.section-title-v3-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--neutral-200), transparent);
+}
+
+/* ============================================
+   TAB NAVIGATION
+   ============================================ */
+.stRadio > div {
+    background: var(--neutral-100);
+    padding: 4px;
+    border-radius: var(--radius-lg);
+    gap: 4px;
+    border: 1px solid var(--neutral-200);
+}
+
+.stRadio > div > label {
+    background: transparent;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--neutral-600);
+    transition: all var(--duration-fast) var(--ease-out);
+    border: 1px solid transparent;
+    letter-spacing: 0.01em;
+}
+
+.stRadio > div > label:hover {
+    background: rgba(255,255,255,0.7);
+    color: var(--neutral-800);
+}
+
+.stRadio > div > label[data-checked="true"] {
+    background: var(--neutral-0) !important;
+    color: var(--neutral-900) !important;
+    box-shadow: var(--shadow-sm);
+    border-color: var(--neutral-200);
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.stButton > button {
+    background: linear-gradient(135deg, var(--ups-brown-950) 0%, var(--ups-brown-900) 100%);
+    color: var(--ups-gold-500);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    transition: all var(--duration-fast) var(--ease-out);
+    box-shadow: var(--shadow-sm);
+}
+
+.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+}
+
+.stDownloadButton > button {
+    background: var(--neutral-0);
+    color: var(--neutral-700);
+    font-weight: 600;
+    font-size: 12px;
+    border: 1px solid var(--neutral-300);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1.5rem;
+    transition: all var(--duration-fast) var(--ease-out);
+    box-shadow: var(--shadow-xs);
+}
+
+.stDownloadButton > button:hover {
+    background: var(--neutral-50);
+    border-color: var(--neutral-400);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ============================================
+   FORM CONTROLS
+   ============================================ */
+.stSelectbox > div > div,
+.stMultiSelect > div > div {
+    border: 1px solid var(--neutral-300) !important;
+    border-radius: var(--radius-md) !important;
+    background: var(--neutral-0) !important;
+    transition: all var(--duration-fast) var(--ease-out) !important;
+    font-size: 13px !important;
+    box-shadow: var(--shadow-xs) !important;
+}
+
+.stSelectbox > div > div:hover,
+.stMultiSelect > div > div:hover {
+    border-color: var(--neutral-400) !important;
+}
+
+.stSelectbox > div > div:focus-within,
+.stMultiSelect > div > div:focus-within {
+    border-color: var(--ups-gold-500) !important;
+    box-shadow: 0 0 0 3px rgba(255,181,0,0.1), var(--shadow-xs) !important;
+}
+
+.stDateInput > div > div > input,
+.stTimeInput > div > div > input,
+.stNumberInput > div > div > input {
+    border: 1px solid var(--neutral-300) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 0.625rem 0.875rem !important;
+    font-size: 13px !important;
+    transition: all var(--duration-fast) var(--ease-out) !important;
+}
+
+.stDateInput > div > div:focus-within,
+.stTimeInput > div > div:focus-within,
+.stNumberInput > div > div:focus-within {
+    border-color: var(--ups-gold-500) !important;
+    box-shadow: 0 0 0 3px rgba(255,181,0,0.1) !important;
+}
+
+.stCheckbox > label {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: var(--neutral-700) !important;
+}
+
+/* ============================================
+   CONTENT PANELS
+   ============================================ */
+.content-card {
+    background: var(--neutral-0);
+    border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.content-card-body {
+    padding: 1.75rem;
+}
+
+.content-card-header {
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--neutral-100);
+}
+
+.content-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.02em;
+}
+
+.content-card-subtitle {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--neutral-500);
+    margin: 0;
+}
+
+/* ============================================
+   ALERTS
+   ============================================ */
+.stSuccess > div {
+    background: linear-gradient(135deg, var(--success-light) 0%, rgba(16,185,129,0.05) 100%) !important;
+    border: 1px solid rgba(16,185,129,0.15) !important;
+    border-left: 3px solid var(--success-base) !important;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
+    color: var(--success-dark) !important;
+    font-size: 13px !important;
+}
+
+.stWarning > div {
+    background: linear-gradient(135deg, var(--warning-light) 0%, rgba(245,158,11,0.05) 100%) !important;
+    border: 1px solid rgba(245,158,11,0.15) !important;
+    border-left: 3px solid var(--warning-base) !important;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
+    color: var(--warning-dark) !important;
+    font-size: 13px !important;
+}
+
+.stInfo > div {
+    background: linear-gradient(135deg, var(--info-light) 0%, rgba(59,130,246,0.05) 100%) !important;
+    border: 1px solid rgba(59,130,246,0.15) !important;
+    border-left: 3px solid var(--info-base) !important;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
+    color: var(--info-dark) !important;
+    font-size: 13px !important;
+}
+
+.stError > div {
+    background: linear-gradient(135deg, var(--error-light) 0%, rgba(239,68,68,0.05) 100%) !important;
+    border: 1px solid rgba(239,68,68,0.15) !important;
+    border-left: 3px solid var(--error-base) !important;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
+    color: var(--error-dark) !important;
+    font-size: 13px !important;
+}
+
+/* ============================================
+   EXPANDERS
+   ============================================ */
+.streamlit-expanderHeader {
+    background: var(--neutral-50) !important;
+    border: 1px solid var(--neutral-200) !important;
+    border-radius: var(--radius-md) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 0.875rem 1.125rem !important;
+    color: var(--neutral-700) !important;
+    transition: all var(--duration-fast) var(--ease-out) !important;
+}
+
+.streamlit-expanderHeader:hover {
+    background: var(--neutral-100) !important;
+    border-color: var(--neutral-300) !important;
+}
+
+details[open] .streamlit-expanderHeader {
+    border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+    border-bottom: none !important;
+}
+
+.streamlit-expanderContent {
+    border: 1px solid var(--neutral-200) !important;
+    border-top: none !important;
+    border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+    padding: 1.25rem !important;
+    background: var(--neutral-0) !important;
+    font-size: 13px !important;
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--neutral-100);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--neutral-300);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neutral-400);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card, .content-card {
+    animation: fadeInUp 0.4s var(--ease-out) both;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0ms; }
+.stat-card:nth-child(2) { animation-delay: 50ms; }
+.stat-card:nth-child(3) { animation-delay: 100ms; }
+.stat-card:nth-child(4) { animation-delay: 150ms; }
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+    .app-header-v3-inner {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .app-header-v3-brand {
+        justify-content: center;
+    }
+    
+    .app-header-v3-status {
+        justify-content: center;
+    }
+}
+</style>
 """, unsafe_allow_html=True)
 
 # ============================================================================
-# HEADER - Clean Executive Style
+# HEADER COMPONENT
 # ============================================================================
 st.markdown("""
-<div class="enterprise-header">
-    <div class="enterprise-header-left">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/United_Parcel_Service_logo_2014.svg" 
-             alt="UPS" class="enterprise-header-logo">
-        <div class="enterprise-header-divider"></div>
-        <span class="enterprise-header-title">Flight Routing System</span>
-    </div>
-    <div class="enterprise-header-right">
-        <span class="enterprise-badge enterprise-badge-success">System Operational</span>
-        <span class="enterprise-badge enterprise-badge-neutral">Healthcare Logistics</span>
+<div class="app-header-v3">
+    <div class="app-header-v3-inner">
+        <div class="app-header-v3-brand">
+            <div class="app-header-v3-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/United_Parcel_Service_logo_2014.svg" alt="UPS">
+            </div>
+            <div class="app-header-v3-text">
+                <h1>Flight Routing System <span class="badge">Healthcare</span></h1>
+                <p>Global Route Optimization · UPS Healthcare Logistics</p>
+            </div>
+        </div>
+        <div class="app-header-v3-status">
+            <span class="status-badge status-badge-live">Online</span>
+            <span class="status-badge status-badge-neutral">Marken Precision Logistics</span>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
-
-# Remove the info cards - keep interface cleaner for enterprise use
-# Documentation is available via expander when needed
-
-with st.expander("Documentation & Help", expanded=False):
-    st.markdown("""
-    ### System Overview
-    Automated flight routing optimization for UPS Healthcare Logistics. The system analyzes flight 
-    combinations to identify efficient routes based on time constraints and operational requirements.
-    
-    ### Route Methods
-    | Priority | Method | Best For |
-    |:--------:|--------|----------|
-    | 1 | Fewest Stops | Sensitive shipments, minimal handling |
-    | 2 | Fastest Arrival | Time-critical deliveries |
-    | 3 | Direct Flights | Non-stop when available |
-    
-    ### Connection Rules
-    - **Minimum**: 60 minutes between flights
-    - **Maximum**: 24 hours to prevent storage issues
-    - **Complex Routes**: 5+ stops require team consultation
-    """)
 
 @st.cache_data
 def load_data(file):
@@ -3729,83 +3802,97 @@ def display_radiopharma_results(origin, destination, selected_date, schedule_df,
 
 # Main Application
 def main():
-    # Sidebar - Clean Executive Design
+    # Premium Sidebar
     with st.sidebar:
-        # Brand header - Minimal and professional
+        # Logo and brand
         st.markdown("""
-        <div style="margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.06);">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 36px; height: 36px; background: var(--brand-accent, #FFB500); border-radius: 8px; 
-                            display: flex; align-items: center; justify-content: center;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#351C15" stroke-width="2.5">
+        <div style="margin-bottom: 36px; padding-bottom: 28px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 42px; height: 42px; background: linear-gradient(135deg, #FFB500 0%, #FFC633 100%); 
+                            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+                            box-shadow: 0 4px 12px rgba(255, 181, 0, 0.25);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#351C15" stroke-width="2.5">
                         <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                         <path d="M2 17l10 5 10-5"/>
                         <path d="M2 12l10 5 10-5"/>
                     </svg>
                 </div>
                 <div>
-                    <div style="color: #FFB500; font-size: 14px; font-weight: 600;">Flight Routing</div>
-                    <div style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 500; letter-spacing: 0.5px;">UPS HEALTHCARE</div>
+                    <div style="color: #FFB500; font-size: 15px; font-weight: 700; letter-spacing: -0.02em;">Flight Routing</div>
+                    <div style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">UPS Healthcare</div>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Data Upload Section
+        # Upload section
         st.markdown("""
-        <div style="color: rgba(255,255,255,0.35); font-size: 10px; font-weight: 600; 
-                    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
+        <div style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; 
+                    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 14px;">
             Data Source
         </div>
         """, unsafe_allow_html=True)
         
         uploaded_file = st.file_uploader(
-            "Upload Flight Schedule",
+            "Upload",
             type=['xlsx', 'xls'],
-            help="Excel file with flight schedules and route pairs",
+            help="Upload your flight schedule Excel file",
             label_visibility="collapsed"
         )
         
         if uploaded_file:
-            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 32px;'></div>", unsafe_allow_html=True)
             
-            # Status indicator
+            # Success indicator
             st.markdown("""
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
-                <div style="width: 8px; height: 8px; background: #12b76a; border-radius: 50%;"></div>
-                <span style="color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 500;">Data loaded</span>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px;
+                        background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2);
+                        padding: 10px 14px; border-radius: 8px;">
+                <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; 
+                            box-shadow: 0 0 8px rgba(16,185,129,0.5);"></div>
+                <span style="color: #34d399; font-size: 12px; font-weight: 600;">Data Ready</span>
             </div>
             """, unsafe_allow_html=True)
             
-            # Sheets info
+            # Sheets detected
             st.markdown("""
-            <div style="color: rgba(255,255,255,0.35); font-size: 10px; font-weight: 600; 
-                        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">
-                Detected Sheets
+            <div style="color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 700; 
+                        text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px;">
+                Sheets Detected
             </div>
-            <div style="font-size: 11px; color: rgba(255,255,255,0.6); line-height: 2;">
-                <div>• Flight Schedules</div>
-                <div>• Route Pairs</div>
-                <div style="color: rgba(255,255,255,0.35);">• RP Info (if available)</div>
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+                        border-radius: 8px; padding: 14px 16px;">
+                <div style="font-size: 11px; color: rgba(255,255,255,0.7); line-height: 2.2;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #34d399;">✓</span> Flight Schedules
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #34d399;">✓</span> Route Pairs
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.35);">
+                        <span>○</span> RP Info (optional)
+                    </div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
         
         else:
             st.markdown("""
-            <div style="margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.02); 
-                        border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="margin-top: 24px; padding: 20px 16px; background: rgba(255,255,255,0.02); 
+                        border-radius: 10px; border: 1px solid rgba(255,255,255,0.04); text-align: center;">
+                <div style="color: rgba(255,255,255,0.3); font-size: 24px; margin-bottom: 8px;">↑</div>
                 <div style="color: rgba(255,255,255,0.5); font-size: 11px; line-height: 1.6;">
-                    Upload your Excel file to begin analyzing flight routes.
+                    Upload Excel file<br>to get started
                 </div>
             </div>
             """, unsafe_allow_html=True)
         
         # Footer
         st.markdown("""
-        <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 16px 20px; 
-                    text-align: center; background: linear-gradient(180deg, transparent 0%, #1a0e0a 60%);">
-            <div style="color: rgba(255,255,255,0.25); font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase;">
-                Powered by <span style="color: rgba(255,181,0,0.5);">Marken</span>
+        <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 20px; 
+                    text-align: center; background: linear-gradient(180deg, transparent 0%, var(--ups-brown-deep, #1C0F0A) 70%);">
+            <div style="color: rgba(255,255,255,0.2); font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;">
+                Powered by <span style="color: rgba(255,181,0,0.4);">Marken</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -3816,11 +3903,11 @@ def main():
             schedule_df, routes_df, rp_config = load_data(uploaded_file)
         
         if schedule_df is not None and routes_df is not None:
-            # Statistics Cards - Clean KPIs
+            # Network Overview - Premium Stats Cards
             st.markdown("""
-            <div class="section-header">
-                <span class="section-header-title">Network Overview</span>
-                <div class="section-header-line"></div>
+            <div class="section-title-v3">
+                <span class="section-title-v3-text">Network Overview</span>
+                <div class="section-title-v3-line"></div>
             </div>
             """, unsafe_allow_html=True)
             
@@ -3828,48 +3915,44 @@ def main():
             
             with col1:
                 st.markdown(f"""
-                <div class="metric-card-v2">
-                    <div class="metric-card-v2-accent"></div>
-                    <div class="metric-card-v2-value">{len(schedule_df):,}</div>
-                    <div class="metric-card-v2-label">Total Flights</div>
+                <div class="stat-card">
+                    <div class="stat-card-value">{len(schedule_df):,}</div>
+                    <div class="stat-card-label">Total Flights</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col2:
                 st.markdown(f"""
-                <div class="metric-card-v2">
-                    <div class="metric-card-v2-accent"></div>
-                    <div class="metric-card-v2-value">{len(routes_df):,}</div>
-                    <div class="metric-card-v2-label">Route Pairs</div>
+                <div class="stat-card">
+                    <div class="stat-card-value">{len(routes_df):,}</div>
+                    <div class="stat-card-label">Route Pairs</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col3:
                 st.markdown(f"""
-                <div class="metric-card-v2">
-                    <div class="metric-card-v2-accent"></div>
-                    <div class="metric-card-v2-value">{schedule_df['Orig'].nunique()}</div>
-                    <div class="metric-card-v2-label">Airports</div>
+                <div class="stat-card">
+                    <div class="stat-card-value">{schedule_df['Orig'].nunique()}</div>
+                    <div class="stat-card-label">Airports</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col4:
                 carriers = schedule_df['Carrier'].nunique() if 'Carrier' in schedule_df.columns else 0
                 st.markdown(f"""
-                <div class="metric-card-v2">
-                    <div class="metric-card-v2-accent"></div>
-                    <div class="metric-card-v2-value">{carriers}</div>
-                    <div class="metric-card-v2-label">Carriers</div>
+                <div class="stat-card">
+                    <div class="stat-card-value">{carriers}</div>
+                    <div class="stat-card-label">Carriers</div>
                 </div>
                 """, unsafe_allow_html=True)
             
-            st.markdown("<div style='height: 32px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
             
-            # Tab Navigation
+            # Route Finder Section
             st.markdown("""
-            <div class="section-header">
-                <span class="section-header-title">Route Finder</span>
-                <div class="section-header-line"></div>
+            <div class="section-title-v3">
+                <span class="section-title-v3-text">Route Finder</span>
+                <div class="section-title-v3-line"></div>
             </div>
             """, unsafe_allow_html=True)
             
@@ -3891,17 +3974,17 @@ def main():
             )
             st.session_state.selected_tab = selected_tab
             
-            st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
             
             # Tab Content Container
-            st.markdown('<div class="content-panel-v2">', unsafe_allow_html=True)
+            st.markdown('<div class="content-card"><div class="content-card-body">', unsafe_allow_html=True)
             
             # Tab 1: Tracked Routes
             if selected_tab == "Tracked Routes":
                 st.markdown("""
-                <div class="panel-header-v2">
-                    <div class="panel-title-v2">Tracked Route Finder</div>
-                    <div class="panel-subtitle-v2">Select from pre-defined route pairs in your data sheet</div>
+                <div class="content-card-header">
+                    <div class="content-card-title">Tracked Route Finder</div>
+                    <div class="content-card-subtitle">Select from pre-defined route pairs in your data sheet</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -3985,16 +4068,40 @@ def main():
                 
                 st.markdown("<br>", unsafe_allow_html=True)
                 
-                if st.button("🔍 Find Available Routes", type="primary", use_container_width=True, key="tracked_search"):
-                    if selected_route:
-                        display_route_results(origin, destination, selected_date, schedule_df, min_departure_time=tracked_min_departure)
+                # Create current search params
+                current_params = {
+                    'origin': origin if selected_route else None,
+                    'destination': destination if selected_route else None,
+                    'date': str(selected_date),
+                    'min_departure': tracked_min_departure
+                }
+                
+                # Check if search button clicked
+                search_clicked = st.button("🔍 Find Available Routes", type="primary", use_container_width=True, key="tracked_search")
+                
+                if search_clicked and selected_route:
+                    # Store params and trigger search
+                    st.session_state.tracked_search_params = current_params
+                    st.session_state.tracked_search_triggered = True
+                
+                # Display results if we have matching cached params or just searched
+                if (st.session_state.get('tracked_search_params') == current_params and 
+                    st.session_state.get('tracked_search_triggered')):
+                    display_route_results(origin, destination, selected_date, schedule_df, min_departure_time=tracked_min_departure)
+                    
+                    # Option to clear results
+                    st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+                    if st.button("🔄 Clear Results / New Search", key="tracked_clear", type="secondary"):
+                        st.session_state.tracked_search_triggered = False
+                        st.session_state.tracked_search_params = None
+                        st.rerun()
             
             # Tab 2: Custom Routes
             elif selected_tab == "Custom Routes":
                 st.markdown("""
-                <div class="panel-header-v2">
-                    <div class="panel-title-v2">Custom Route Finder</div>
-                    <div class="panel-subtitle-v2">Select any origin and destination from all available airports</div>
+                <div class="content-card-header">
+                    <div class="content-card-title">Custom Route Finder</div>
+                    <div class="content-card-subtitle">Select any origin and destination from all available airports</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -4072,19 +4179,45 @@ def main():
                 
                 st.markdown("<br>", unsafe_allow_html=True)
                 
-                if st.button("🔍 Find Available Routes", type="primary", use_container_width=True, key="custom_search"):
+                # Create current search params
+                current_custom_params = {
+                    'origin': custom_origin,
+                    'destination': custom_destination,
+                    'date': str(custom_date),
+                    'min_departure': custom_min_departure
+                }
+                
+                # Check if search button clicked
+                custom_search_clicked = st.button("🔍 Find Available Routes", type="primary", use_container_width=True, key="custom_search")
+                
+                if custom_search_clicked:
                     if custom_origin and custom_destination:
                         if custom_origin == custom_destination:
                             st.warning("⚠️ Please select different airports for origin and destination.")
                         else:
-                            display_route_results(custom_origin, custom_destination, custom_date, schedule_df, min_departure_time=custom_min_departure)
+                            # Store params and trigger search
+                            st.session_state.custom_search_params = current_custom_params
+                            st.session_state.custom_search_triggered = True
+                
+                # Display results if we have matching cached params or just searched
+                if (st.session_state.get('custom_search_params') == current_custom_params and 
+                    st.session_state.get('custom_search_triggered') and
+                    custom_origin != custom_destination):
+                    display_route_results(custom_origin, custom_destination, custom_date, schedule_df, min_departure_time=custom_min_departure)
+                    
+                    # Option to clear results
+                    st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+                    if st.button("🔄 Clear Results / New Search", key="custom_clear", type="secondary"):
+                        st.session_state.custom_search_triggered = False
+                        st.session_state.custom_search_params = None
+                        st.rerun()
             
             # Tab 3: RadioPharma
             elif selected_tab == "RadioPharma":
                 st.markdown("""
-                <div class="panel-header-v2">
-                    <div class="panel-title-v2">RadioPharma Route Finder</div>
-                    <div class="panel-subtitle-v2">Specialized routing for radiopharmaceutical shipments with compliance constraints</div>
+                <div class="content-card-header">
+                    <div class="content-card-title">RadioPharma Route Finder</div>
+                    <div class="content-card-subtitle">Specialized routing for radiopharmaceutical shipments with compliance constraints</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -4106,30 +4239,30 @@ def main():
                     col_rp1, col_rp2, col_rp3, col_rp4 = st.columns(4)
                     with col_rp1:
                         st.markdown(f"""
-                        <div class="metric-card-v2" style="text-align: center;">
-                            <div class="metric-card-v2-value">{len(rp_config['approved_origins'])}</div>
-                            <div class="metric-card-v2-label">Approved Origins</div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-card-value">{len(rp_config['approved_origins'])}</div>
+                            <div class="stat-card-label">Approved Origins</div>
                         </div>
                         """, unsafe_allow_html=True)
                     with col_rp2:
                         st.markdown(f"""
-                        <div class="metric-card-v2" style="text-align: center;">
-                            <div class="metric-card-v2-value">{len(rp_config['approved_destinations'])}</div>
-                            <div class="metric-card-v2-label">Approved Dest.</div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-card-value">{len(rp_config['approved_destinations'])}</div>
+                            <div class="stat-card-label">Approved Dest.</div>
                         </div>
                         """, unsafe_allow_html=True)
                     with col_rp3:
                         st.markdown(f"""
-                        <div class="metric-card-v2" style="text-align: center;">
-                            <div class="metric-card-v2-value">{len(rp_config['prohibited_flights'])}</div>
-                            <div class="metric-card-v2-label">Prohibited Flights</div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-card-value">{len(rp_config['prohibited_flights'])}</div>
+                            <div class="stat-card-label">Prohibited Flights</div>
                         </div>
                         """, unsafe_allow_html=True)
                     with col_rp4:
                         st.markdown(f"""
-                        <div class="metric-card-v2" style="text-align: center;">
-                            <div class="metric-card-v2-value" style="color: var(--success-500);">✓</div>
-                            <div class="metric-card-v2-label">Compliance Active</div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-card-value" style="color: var(--success-base, #10b981);">✓</div>
+                            <div class="stat-card-label">Compliance Active</div>
                         </div>
                         """, unsafe_allow_html=True)
                     
@@ -4216,84 +4349,110 @@ def main():
                 
                 st.markdown("<br>", unsafe_allow_html=True)
                 
-                if st.button("🔍 Find RadioPharma Routes", type="primary", use_container_width=True, key="rp_search"):
+                # Create current search params
+                current_rp_params = {
+                    'origin': rp_origin,
+                    'destination': rp_destination,
+                    'date': str(rp_date),
+                    'min_departure': rp_min_departure
+                }
+                
+                # Check if search button clicked
+                rp_search_clicked = st.button("🔍 Find RadioPharma Routes", type="primary", use_container_width=True, key="rp_search")
+                
+                if rp_search_clicked:
                     if rp_origin and rp_destination:
                         if rp_origin == rp_destination:
                             st.warning("⚠️ Please select different airports for origin and destination.")
                         else:
-                            display_radiopharma_results(rp_origin, rp_destination, rp_date, schedule_df, rp_config, min_departure_time=rp_min_departure)
+                            # Store params and trigger search
+                            st.session_state.rp_search_params = current_rp_params
+                            st.session_state.rp_search_triggered = True
+                
+                # Display results if we have matching cached params or just searched
+                if (st.session_state.get('rp_search_params') == current_rp_params and 
+                    st.session_state.get('rp_search_triggered') and
+                    rp_origin != rp_destination):
+                    display_radiopharma_results(rp_origin, rp_destination, rp_date, schedule_df, rp_config, min_departure_time=rp_min_departure)
+                    
+                    # Option to clear results
+                    st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+                    if st.button("🔄 Clear Results / New Search", key="rp_clear", type="secondary"):
+                        st.session_state.rp_search_triggered = False
+                        st.session_state.rp_search_params = None
+                        st.rerun()
             
-            st.markdown('</div>', unsafe_allow_html=True)  # Close panel
+            st.markdown('</div></div>', unsafe_allow_html=True)  # Close content-card-body and content-card
     
     else:
-        # Welcome screen - Clean Enterprise Design
+        # Welcome screen - Premium Design
         st.markdown("""
-        <div style="text-align: center; padding: 80px 40px 48px 40px; max-width: 720px; margin: 0 auto;">
-            <div style="width: 56px; height: 56px; background: var(--brand-accent, #FFB500); border-radius: 12px; 
-                        display: flex; align-items: center; justify-content: center;
-                        margin: 0 auto 20px auto;">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#351C15" stroke-width="2.5">
+        <div style="text-align: center; padding: 5rem 2.5rem 3rem 2.5rem; max-width: 800px; margin: 0 auto;">
+            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--ups-gold-500, #FFB500) 0%, var(--ups-gold-400, #fbbf24) 100%); 
+                        border-radius: var(--radius-xl, 16px); display: flex; align-items: center; justify-content: center;
+                        margin: 0 auto 1.5rem auto; box-shadow: var(--shadow-gold, 0 4px 14px rgba(255,181,0,0.25));">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--ups-brown-950, #351C15)" stroke-width="2.5">
                     <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                     <path d="M2 17l10 5 10-5"/>
                     <path d="M2 12l10 5 10-5"/>
                 </svg>
             </div>
-            <h1 style="color: var(--gray-900, #101828); font-size: 24px; font-weight: 600; margin: 0 0 8px 0; letter-spacing: -0.02em;">
+            <h1 style="color: var(--neutral-900, #171717); font-size: 1.75rem; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: -0.03em;">
                 Flight Routing System
             </h1>
-            <p style="color: var(--gray-500, #667085); font-size: 14px; margin: 0; font-weight: 400;">
+            <p style="color: var(--neutral-500, #737373); font-size: 0.9375rem; margin: 0; font-weight: 500;">
                 Upload your flight schedule to begin route optimization
             </p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Feature cards - Compact
+        # Feature cards
         col1, col2, col3 = st.columns(3)
         
         with col1:
             st.markdown("""
-            <div class="metric-card-v2" style="text-align: center; padding: 24px 16px;">
-                <div style="width: 40px; height: 40px; background: var(--success-50, #ecfdf3); border-radius: 8px; 
-                            display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#12b76a" stroke-width="2">
+            <div class="stat-card" style="text-align: center; padding: 1.75rem 1.25rem;">
+                <div style="width: 44px; height: 44px; background: var(--success-light, #ecfdf5); border-radius: var(--radius-lg, 12px); 
+                            display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--success-base, #10b981)" stroke-width="2.5">
                         <polyline points="20 6 9 17 4 12"/>
                     </svg>
                 </div>
-                <div style="font-size: 14px; font-weight: 600; color: var(--gray-900, #101828); margin-bottom: 4px;">Fewest Stops</div>
-                <div style="font-size: 12px; color: var(--gray-500, #667085); line-height: 1.4;">Minimize handling risk</div>
+                <div style="font-size: 0.9375rem; font-weight: 700; color: var(--neutral-900, #171717); margin-bottom: 0.25rem;">Fewest Stops</div>
+                <div style="font-size: 0.8125rem; color: var(--neutral-500, #737373); line-height: 1.5;">Minimize handling risk</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
             st.markdown("""
-            <div class="metric-card-v2" style="text-align: center; padding: 24px 16px;">
-                <div style="width: 40px; height: 40px; background: var(--info-50, #f0f9ff); border-radius: 8px; 
-                            display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ba5ec" stroke-width="2">
+            <div class="stat-card" style="text-align: center; padding: 1.75rem 1.25rem;">
+                <div style="width: 44px; height: 44px; background: var(--info-light, #eff6ff); border-radius: var(--radius-lg, 12px); 
+                            display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--info-base, #3b82f6)" stroke-width="2.5">
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
                 </div>
-                <div style="font-size: 14px; font-weight: 600; color: var(--gray-900, #101828); margin-bottom: 4px;">Fastest Arrival</div>
-                <div style="font-size: 12px; color: var(--gray-500, #667085); line-height: 1.4;">Time-critical delivery</div>
+                <div style="font-size: 0.9375rem; font-weight: 700; color: var(--neutral-900, #171717); margin-bottom: 0.25rem;">Fastest Arrival</div>
+                <div style="font-size: 0.8125rem; color: var(--neutral-500, #737373); line-height: 1.5;">Time-critical delivery</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col3:
             st.markdown("""
-            <div class="metric-card-v2" style="text-align: center; padding: 24px 16px;">
-                <div style="width: 40px; height: 40px; background: var(--warning-50, #fffaeb); border-radius: 8px; 
-                            display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f79009" stroke-width="2">
+            <div class="stat-card" style="text-align: center; padding: 1.75rem 1.25rem;">
+                <div style="width: 44px; height: 44px; background: var(--warning-light, #fffbeb); border-radius: var(--radius-lg, 12px); 
+                            display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--warning-base, #f59e0b)" stroke-width="2.5">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                 </div>
-                <div style="font-size: 14px; font-weight: 600; color: var(--gray-900, #101828); margin-bottom: 4px;">RadioPharma</div>
-                <div style="font-size: 12px; color: var(--gray-500, #667085); line-height: 1.4;">Compliance-verified</div>
+                <div style="font-size: 0.9375rem; font-weight: 700; color: var(--neutral-900, #171717); margin-bottom: 0.25rem;">RadioPharma</div>
+                <div style="font-size: 0.8125rem; color: var(--neutral-500, #737373); line-height: 1.5;">Compliance-verified</div>
             </div>
             """, unsafe_allow_html=True)
         
-        st.markdown("<div style='height: 24px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
         
         with st.expander("File Requirements", expanded=False):
             st.markdown("""
